@@ -8,12 +8,16 @@ RaspberryPi gaming glory: Software to run a 64x48 single-colour LED matrix/displ
 IN THE WORKS:
 
 void lightOn (int col, int row);
+
 void lightOff (int col, int row);
+
 void rowOn (int row);
+
 void colOn (int col);
+
 void flushScreen (void);
+
 void write (char* str); //writes str to the screen
 
 In addition, we need to write interface functions to sample the input from the joystick and provide this information to the high-level programmers convenien
 tly.
-
