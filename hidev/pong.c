@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-
+//This is a test of making commits through terminal.
 //Every other size or position value is based on the following eight. We might add or remove some as we write the program.
 #define ARRAY_HEIGHT  48
 #define ARRAY_WIDTH  64
