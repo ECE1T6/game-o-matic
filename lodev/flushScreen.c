@@ -4,9 +4,15 @@
 #include <stdlib.h>
 #include <wiringPi.h>
 
-int clock(void){
-  digitalWrite(3,HIGH); //3 = "pin three" on RasPi --> "clock" pin
+int xClock(void){
+	digitalWrite(3,HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
 	digitalWrite(3,LOW);
+return;
+}
+
+int yClock(void){
+	digitalWrite(4,HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
+	digitalWrite(4,LOW);
 return;
 }
 
@@ -20,7 +26,8 @@ int flushScreen(void){
 	digitalWrite(0,LOW); //0 = "pin zero" on RasPi --> x-"data" pin
 	digitalWrite(1,LOW); //1 = "pin one" on Raspi --> y-"data" pin
 	for(x=0;x<=64;x++){
-		clock();
+		xClock();
+		yClock();
 	}
 	outputToScreen();
 return;
@@ -28,6 +35,6 @@ return;
 
 
 int main(void){
-flushScreen(col,row);
+flushScreen();
 return;
 }
