@@ -9,14 +9,10 @@ IN THE WORKS:
 
 void lightOn (int col, int row);
 
-void lightOff (int col, int row);
-
-void rowOn (int row);
-
-void colOn (int col);
+void printScreen(bool** matrixPtr);
 
 void flushScreen (void);
 
-void write (char* str); //writes str to the screen
+void write (int col, int row, char* str); //writes str to the matrix in preperation for output
 
 In addition, we need to write interface functions to sample the input from the joystick and provide this information to the high-level programmers conveniently.

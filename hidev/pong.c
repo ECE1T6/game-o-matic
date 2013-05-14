@@ -1,146 +1,218 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include <math.h>
-
-//Every other size or position value is based on the following eight. We might add or remove some as we write the program.
+#include <stdbool.h>
+//#include <windows.h>
+/*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
 #define ARRAY_HEIGHT  48
 #define ARRAY_WIDTH  64
-#define VERTICAL_MARGIN  0
-#define HORIZONTAL_MARGIN  0
-#define PADDLE_HEIGHT  8
-#define PADDLE_WIDTH  2
-#define REFRESH_DELAY 10
-#define DISTANCE_PER_REFRESH 1 //not implemented
-/*
-The margins keep track of the amount of the 64x48 array we decide not to use for the game. We don't actually need an array, since we can just keep track of the location and size of the paddles and ball, but we'll imagine a grid anyway. Of several implementations, I think the most efficient would be that we use a coordinate system as if a 64x48 array existed and use the margins to measure the game boundaries. This way, the code's coordinate system is compatible with the output functions without excess arithmetic. The downside is somewhat unintuitive code.
-*/
+#define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
+#define BOTTOM_MARGIN  0.0
+#define LEFT_MARGIN  0.0
+#define RIGHT_MARGIN  0.0
+#define PADDLE_HEIGHT  8.0
+#define PADDLE_WIDTH  2.0
+#define BALL_RADIUS  1.0
+#define REFRESH_DELAY  10
+#define DISTANCE_PER_REFRESH  1.0
 
-#define VERTICAL_END  ARRAY_HEIGHT-VERTICAL_MARGIN-1
-#define HORIZONTAL_END  ARRAY_WIDTH-HORIZONTAL_MARGIN-1
-/*A few of these things are plus or minus one, pending testing or later scrutiny. I'd rather focus on the logic right now. A key point is that we're treating the LED array like any other array, and arrays start at 0.*/
+#define BOTTOM_END  ARRAY_HEIGHT-BOTTOM_MARGIN-1
+#define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
 
 struct ball{
-    int previous_x_coord; //These keep track of what is lit up, to be changed if (int)x_coord != previous_x_coord
-    int previous_y_coord;
-    float x_coord; //The coordinates would be rounded for output, but floats let us keep track of movement more accurately.
-    float y_coord;
-    float slope; /*The ball moves some distance per refresh (a constant speed). The slope defines how it is split into
-                   components, which modify x_coord and y_coord. Right now, slope is not necessary but nice.*/
-    float delta_x; //These are components of the distance traveled per unit of time.
-    float delta_y;
-    int radius; /*For testing purposes at least we'll assume the ball to be square -- changing shape is needless and
-                  complex. A 3x3 square has radius 1, 4x4 has radius 2, etc. It's possible but unlikely that this would
-                  work better as a float. It's common to allow some visual clipping before interactions occur in games,    
-                  but with our visual resolution it probably won't work well.*/
+	float x_coord; /*The coordinates would be rounded for output, but floats let us keep track of movement more accurately.*/
+	float y_coord;
+	float slope;
+	float delta_x;
+	float delta_y;
+	float radius; /*A 3x3 square has radius 1, 5x5 has radius 2, etc.*/
 };
-
 struct paddle{
-    int x_coord; //x_coord is constant. The coordinates might be the innermost pixel on the top of the paddle.
-    int y_coord;
-    /*Integers might be better than floats here -- the player should know exactly what the paddle's state is. Digital
-    joysticks, limited visual resolution, and (to a smaller extent) limited refresh rates for reading input make that
-    precision less beneficial anyway. However, if we have a fast refresh rate and want to slow down paddle movement then
-    we can either use floats or ignore movement on some refreshes -- the former sounds better.*/
-    int height; //Height and width are #define'd but it might be preferable to refer to them here.
-    int width;
+	float x_coord; /*x_coord is constant. The coordinates refer to the innermost pixel on the top of the paddle.*/
+	float y_coord;
+	float height; /*Height and width are #define'd but it might be preferable to refer to them here.*/
+	float width;
 };
-
 struct score{
-    int left_score;
-    int right_score;
+	int left_score;
+	int right_score;
 };
 
-//print_gamestate is for testing purposes
-void print_gamestate(struct ball *ball_ptr, struct paddle *left_paddle_ptr, struct paddle *right_paddle_ptr, struct score *score_ptr){
-    printf("ball:\nx_coord = %f\ny_coord = %f\nslope = %f\ndelta_x = %f\ndelta_y = %f\nradius = %d\n\n", ball_ptr->x_coord, ball_ptr->y_coord, ball_ptr->slope, ball_ptr->delta_x, ball_ptr->delta_y, ball_ptr->radius);
-    printf("left_paddle:\nx_coord = %d\ny_coord = %d\nheight = %d\nwidth = %d\n\n", left_paddle_ptr->x_coord, left_paddle_ptr->y_coord, left_paddle_ptr->height, left_paddle_ptr->width);
-    printf("right_paddle:\nx_coord = %d\ny_coord = %d\nheight = %d\nwidth = %d\n\n", right_paddle_ptr->x_coord, right_paddle_ptr->y_coord, right_paddle_ptr->height, right_paddle_ptr->width);
-    printf("score:\nleft_score = %d\nright_score = %d\n\n", score_ptr->left_score, score_ptr->right_score);
+void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+    int i, j;
+    for(i = 0; i < ARRAY_HEIGHT; i++){
+        for(j = 0; j < ARRAY_WIDTH; j++){
+            if(array[i][j] == true){
+                printf(" #", array[i][j]);
+            }
+            else{
+                printf("  ", array[i][j]);
+            }
+        }
+        printf("\n");
+    }
 }
-
+void draw_ball(struct ball *ball_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
+	int i, j;
+	for(j = 2*ball_ptr->radius; j>=0; j--){
+		for(i = 2*ball_ptr->radius; i>=0; i--){
+			if((int) (ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i <= BOTTOM_END /*This might not occur*/
+			&& (int) (ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i >= TOP_MARGIN /*This might not occur*/
+			&& (int) (ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j <= RIGHT_END
+			&& (int) (ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j >= LEFT_MARGIN){
+				array[(int)(ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i]
+				     [(int)(ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j] = boolean;
+			}
+		}
+	}
+}
+void draw_left_paddle(struct paddle *left_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
+	int i, j;
+	for(j = left_paddle_ptr->height-1; j>=0; j--){
+		for(i = left_paddle_ptr->width-1; i>=0; i--){
+			array[(int) (left_paddle_ptr->y_coord + 0.5) + j][(int) (left_paddle_ptr->x_coord + 0.5) - i] = boolean;
+		}
+	}
+}
+void draw_right_paddle(struct paddle *right_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
+	int i, j;
+	for(j = right_paddle_ptr->height-1; j>=0; j--){
+		for(i = right_paddle_ptr->width-1; i>=0; i--){
+			array[(int) (right_paddle_ptr->y_coord + 0.5) + j][(int) (right_paddle_ptr->x_coord + 0.5) + i] = boolean;
+		}
+	}
+}
+void check_wall_deflection(struct ball *ball_ptr){
+	if(ball_ptr->y_coord - ball_ptr->radius < TOP_MARGIN){ /*Deflection off of the top side*/
+		ball_ptr->y_coord = TOP_MARGIN + (TOP_MARGIN - (ball_ptr->y_coord - ball_ptr->radius));
+		ball_ptr->delta_y *= -1;
+		ball_ptr->slope *= -1;
+	}
+	else if(ball_ptr->y_coord + ball_ptr->radius > BOTTOM_END){ /*Deflection off of the bottom side*/
+		ball_ptr->y_coord = BOTTOM_END - ((ball_ptr->y_coord + ball_ptr->radius) - BOTTOM_END);
+		ball_ptr->delta_y *= -1;
+		ball_ptr->slope *= -1;
+	}
+}
+void check_left_paddle_impact(struct ball *ball_ptr, struct paddle *left_paddle_ptr){
+	int ball_impact_y_coord = ball_ptr->y_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord) * ball_ptr->slope;
+	/*Checking if the ball hit the inner side of left_paddle: (two conditions for vertical position, one checking if impact occurred this cycle*/
+	if(ball_impact_y_coord + ball_ptr->radius >= left_paddle_ptr->y_coord
+	&& ball_impact_y_coord - ball_ptr->radius <= left_paddle_ptr->y_coord + left_paddle_ptr->height - 1
+	&& ball_ptr->x_coord - ball_ptr->delta_x - ball_ptr->radius >= left_paddle_ptr->x_coord){
+		/*These ignore imparted paddle momentum right now:*/
+		ball_ptr->x_coord = left_paddle_ptr->x_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord);
+		ball_ptr->delta_x *= -1;
+		ball_ptr->slope *= -1;
+	}
+}
+void check_right_paddle_impact(struct ball *ball_ptr, struct paddle *right_paddle_ptr){
+	int ball_impact_y_coord = ball_ptr->y_coord - (ball_ptr->x_coord - right_paddle_ptr->x_coord) * ball_ptr->slope;
+	/*Checking if the ball hit the inner side of right_paddle: (two conditions for vertical position, one checking if impact occurred this cycle)*/
+	if(ball_impact_y_coord + ball_ptr->radius >= right_paddle_ptr->y_coord
+	&& ball_impact_y_coord - ball_ptr->radius <= right_paddle_ptr->y_coord + right_paddle_ptr->height - 1
+	&& ball_ptr->x_coord - ball_ptr->delta_x + ball_ptr->radius <= right_paddle_ptr->x_coord){
+		/*These ignore imparted paddle momentum right now:*/
+		ball_ptr->x_coord = right_paddle_ptr->x_coord - (ball_ptr->x_coord - right_paddle_ptr->x_coord);
+		ball_ptr->delta_x *= -1;
+		ball_ptr->slope *= -1;
+	}
+}
+void reset_ball(struct ball *ball_ptr){
+	ball_ptr->x_coord = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2;
+	ball_ptr->y_coord = TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2;
+}
 void display_winner(struct score *score_ptr){
-    if(score_ptr->left_score == 5){
-        //print to screen that the left player won, or do some visual effect
-    }
-    else{
-        //print to screen that the right player won, or do some visual effect
-    }
+	if(score_ptr->left_score == 5){
+		/*print to screen that the left player won, or do some visual effect*/
+	}
+	else{
+		/*print to screen that the right player won, or do some visual effect*/
+	}
 }
 
 int main (void){
-//initialization start
-    srand(time(NULL));
+/*initialization start*/
+	int score_delay = 10; /*Deactivates ball movement for some time after someone scores*/
 
-    struct ball ball = {ARRAY_WIDTH/2, rand()%(ARRAY_HEIGHT-2*VERTICAL_MARGIN)+VERTICAL_MARGIN, -1.0, 'R', sqrt(0.5), -sqrt(0.5), 1};
-    struct ball *ball_ptr = &ball;
+	struct ball ball = {LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2, 1.0, DISTANCE_PER_REFRESH * sqrt(0.5), -DISTANCE_PER_REFRESH * sqrt(0.5), BALL_RADIUS};
+	struct ball *ball_ptr = &ball;
 
-    struct paddle left_paddle = {HORIZONTAL_MARGIN+PADDLE_WIDTH+3, ARRAY_HEIGHT/2-PADDLE_HEIGHT/2, PADDLE_HEIGHT, PADDLE_WIDTH};
-    struct paddle *left_paddle_ptr = &left_paddle;
+	struct paddle left_paddle = {LEFT_MARGIN + PADDLE_WIDTH + 3, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2, PADDLE_HEIGHT, PADDLE_WIDTH};
+	struct paddle *left_paddle_ptr = &left_paddle;
 
-    struct paddle right_paddle = {HORIZONTAL_END-PADDLE_WIDTH-3, ARRAY_HEIGHT/2-PADDLE_HEIGHT/2, PADDLE_HEIGHT, PADDLE_WIDTH};
-    struct paddle *right_paddle_ptr = &right_paddle;
+	struct paddle right_paddle = {RIGHT_END - PADDLE_WIDTH - 3, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2, PADDLE_HEIGHT, PADDLE_WIDTH};
+	struct paddle *right_paddle_ptr = &right_paddle;
 
-    struct score score = {0, 0};
-    struct score *score_ptr = &score;
+	struct score score = {0, 0};
+	struct score *score_ptr = &score;
 
-    //print_gamestate(ball_ptr, left_paddle_ptr, right_paddle_ptr, score_ptr); //for testing purposes
-//initialization end
-//game start
-    while (1){
-        //sleep function using REFRESH_DELAY
-        //gather input -- move paddles -- have plan if paddle runs into the ball
+	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
 
-        //Moving the ball, accounting for deflections: (should detect which surface is hit first in a corner)
-        //y_coord:
-        ball_ptr->previous_y_coord = (int)ball_ptr->y_coord;
-        ball_ptr->y_coord += ball_ptr->delta_y;
-        if(ball_ptr->y_coord - ball_ptr->radius < VERTICAL_MARGIN){ //deflection off of the top side
-            ball_ptr->y_coord = VERTICAL_MARGIN + (VERTICAL_MARGIN - ball_ptr->y_coord);
-            ball_ptr->delta_y *= -1;
-            ball_ptr->slope *= -1;
-        }
-        else if(ball_ptr->y_coord + ball_ptr->radius > VERTICAL_END){ // deflection off of the bottom side
-            ball_ptr->y_coord = VERTICAL_END - (ball_ptr->y_coord - VERTICAL_END);
-            ball_ptr->delta_y *= -1;
-            ball_ptr->slope *= -1;
-        }
-        //x_coord:
-        ball_ptr->previous_x_coord = (int) ball_ptr->x_coord;
-        ball_ptr->x_coord += ball_ptr->delta_x;
-        if(ball_ptr->x_coord - ball_ptr->radius <= left_paddle_ptr->x_coord){ //possible interaction with left_paddle
-            //Checking if the ball hit the inner side of left_paddle:
-            if(ball_ptr->y_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord) * ball_ptr->slope >= left_paddle_ptr->y_coord - ball_ptr->radius &&
-               ball_ptr->y_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord) * ball_ptr->slope <= left_paddle_ptr->y_coord + ball_ptr->radius){
+/*initialization end*/
+/*game start*/
+	while (1){
+		/*sleep function using REFRESH_DELAY*/
 
-                //These ignore imparted paddle momentum right now:
-                ball_ptr->x_coord = left_paddle_ptr->x_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord);
-                ball_ptr->delta_x *= -1;
-                ball_ptr->slope *= -1;
-            }
-            //Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)
-            //BUG: conditions will still be checked if the ball passes the paddle -- if it passes successfully, return must be prevented
-        }
-        else if(ball_ptr->x_coord + ball_ptr->radius >= left_paddle_ptr->x_coord){ //possible interaction with right_paddle
-            //Checking if the ball hit the inner side of right_paddle:
-            if(ball_ptr->y_coord - (ball_ptr->x_coord - right_paddle_ptr->x_coord) * ball_ptr->slope >= right_paddle_ptr->y_coord - ball_ptr->radius &&
-               ball_ptr->y_coord - (ball_ptr->x_coord - right_paddle_ptr->x_coord) * ball_ptr->slope <= right_paddle_ptr->y_coord + ball_ptr->radius){
+		/*Erase paddles from array:*/
+		draw_left_paddle(left_paddle_ptr, array, false);
+		draw_right_paddle(right_paddle_ptr, array, false);
 
-                //These ignore imparted paddle momentum right now:
-                ball_ptr->x_coord = right_paddle_ptr->x_coord - (ball_ptr->x_coord - right_paddle_ptr->x_coord);
-                ball_ptr->delta_x *= -1;
-                ball_ptr->slope *= -1;
-            }
-            //Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)
-            //BUG: conditions will still be checked if the ball passes the paddle -- if it passes successfully, return must be prevented
-        }
+		/*gather input and move paddles*/
 
-        //give signal to commit outputs to the screen, or not as the case may be
-        /*detect if the ball went off the screen and, if it did, increment score. if the incremented score == 5,
-        break. if someone scored but both scores are < 5, reset the ball and initiate a short countdown before it
-        starts moving again.*/
-    }
-    display_winner(score_ptr);
-//game end
-    return 0;
+		if (score_delay > 0){
+			score_delay--;
+		}
+		else if(score_delay == 0){
+			draw_ball(ball_ptr, array, false); /*Erase ball from array*/
+			ball_ptr->y_coord += ball_ptr->delta_y;
+			ball_ptr->x_coord += ball_ptr->delta_x;
+			check_wall_deflection(ball_ptr);
+
+			if(ball_ptr->x_coord - ball_ptr->radius < left_paddle_ptr->x_coord){ /*The ball has pierced the plane of left_paddle*/
+
+				check_left_paddle_impact(ball_ptr, left_paddle_ptr);
+
+				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
+
+				/*Checking if the ball hit the left edge of the screen:*/
+				if((int)(ball_ptr->x_coord + 0.5 - ball_ptr->radius) < LEFT_MARGIN){
+					score_ptr->left_score++; /*Also change displayed score*/
+					if(score_ptr->left_score == 5){
+						break; /*Goes to display_winner()*/
+					}
+					reset_ball(ball_ptr);
+					score_delay = 10;
+				}
+			}
+			else if(ball_ptr->x_coord + ball_ptr->radius >= right_paddle_ptr->x_coord){ /*The ball has pierced the plane of right_paddle*/
+                check_right_paddle_impact(ball_ptr, right_paddle_ptr);
+
+				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
+
+				/*Checking if the ball hit the left edge of the screen:*/
+				if((int) (ball_ptr->x_coord + 0.5 + ball_ptr->radius) > RIGHT_END){
+					score_ptr->right_score++; /*Also change displayed score*/
+					if(score_ptr->right_score == 5){
+						break; /*Goes to display_winner()*/
+					}
+					reset_ball(ball_ptr);
+					score_delay = 10;
+				}
+			}
+			draw_ball(ball_ptr, array, true);
+		}
+
+		draw_left_paddle(left_paddle_ptr, array, true);
+		draw_right_paddle(right_paddle_ptr, array, true);
+
+        //print_test(array);
+        //Sleep(35);
+        //system("cls");
+
+        /*pass array to higher level function*/
+
+	}
+	display_winner(score_ptr);
+/*game end*/
+	return 0;
 }
