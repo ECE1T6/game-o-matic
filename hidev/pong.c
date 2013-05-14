@@ -2,19 +2,21 @@
 #include <math.h>
 #include <stdbool.h>
 
-//Every other size or position value is based on the following nine. We might add or remove some as we write the program.
+//Every other size or position value is based on the following. We might add or remove some as we write the program.
 #define ARRAY_HEIGHT  48.0
 #define ARRAY_WIDTH  64.0
-#define VERTICAL_MARGIN  0.0 //The margins measure the non-playable space in the array
-#define HORIZONTAL_MARGIN  0.0
-#define REFRESH_DELAY  10
-#define DISTANCE_PER_REFRESH  1.0
+#define TOP_MARGIN  0.0 //The margins bound the playable space in the array -- they might hold things like score
+#define BOTTOM_MARGIN  0.0
+#define LEFT_MARGIN  0.0
+#define RIGHT_MARGIN  0.0
 #define PADDLE_HEIGHT  8.0
 #define PADDLE_WIDTH  2.0
 #define BALL_RADIUS  1.0
+#define REFRESH_DELAY  10
+#define DISTANCE_PER_REFRESH  1.0
 
-#define VERTICAL_END  ARRAY_HEIGHT-VERTICAL_MARGIN-1
-#define HORIZONTAL_END  ARRAY_WIDTH-HORIZONTAL_MARGIN-1
+#define BOTTOM_END  ARRAY_HEIGHT-BOTTOM_MARGIN-1
+#define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
 
 struct ball{
 	float x_coord; /*The coordinates would be rounded for output, but floats let us keep track of movement more accurately.*/
@@ -39,7 +41,13 @@ void draw_ball(struct ball *ball_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], boo
 	int i, j;
 	for(j = 2*ball_ptr->radius; j>=0; j--){
 		for(i = 2*ball_ptr->radius; i>=0; i--){
-			array[(int)(ball_ptr->y_coord+0.5)-ball_ptr->radius+i][(int)(ball_ptr->x_coord+0.5)-ball_ptr->radius+j] = boolean;
+			if((int) (ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i <= BOTTOM_END /*This might not occur*/
+			&& (int) (ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i >= TOP_MARGIN /*This might not occur*/
+			&& (int) (ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j <= RIGHT_END
+			&& (int) (ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j >= LEFT_MARGIN){
+				array[(int)(ball_ptr->y_coord + 0.5 - ball_ptr->radius) + i]
+				     [(int)(ball_ptr->x_coord + 0.5 - ball_ptr->radius) + j] = boolean;
+			}
 		}
 	}
 }
@@ -60,13 +68,13 @@ void draw_right_paddle(struct ball *right_paddle_ptr, bool array[ARRAY_HEIGHT][A
 	}
 }
 void check_wall_deflection(struct ball *ball_ptr){
-	if(ball_ptr->y_coord - ball_ptr->radius < VERTICAL_MARGIN){ /*Deflection off of the top side*/
-		ball_ptr->y_coord = VERTICAL_MARGIN + (VERTICAL_MARGIN - (ball_ptr->y_coord - ball_ptr->radius));
+	if(ball_ptr->y_coord - ball_ptr->radius < TOP_MARGIN){ /*Deflection off of the top side*/
+		ball_ptr->y_coord = TOP_MARGIN + (TOP_MARGIN - (ball_ptr->y_coord - ball_ptr->radius));
 		ball_ptr->delta_y *= -1;
 		ball_ptr->slope *= -1;
 	}
-	else if(ball_ptr->y_coord + ball_ptr->radius > VERTICAL_END){ /*Deflection off of the bottom side*/
-		ball_ptr->y_coord = VERTICAL_END - ((ball_ptr->y_coord + ball_ptr->radius) - VERTICAL_END);
+	else if(ball_ptr->y_coord + ball_ptr->radius > BOTTOM_END){ /*Deflection off of the bottom side*/
+		ball_ptr->y_coord = BOTTOM_END - ((ball_ptr->y_coord + ball_ptr->radius) - BOTTOM_END);
 		ball_ptr->delta_y *= -1;
 		ball_ptr->slope *= -1;
 	}
@@ -96,8 +104,8 @@ void check_right_paddle_impact(struct ball *ball_ptr, struct paddle *right_paddl
 	}
 }
 void reset_ball(struct ball *ball_ptr){
-	ball_ptr->x_coord = ARRAY_WIDTH/2;
-	ball_ptr->y_coord = ARRAY_HEIGHT/2;
+	ball_ptr->x_coord = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2;
+	ball_ptr->y_coord = TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2;
 }
 void display_winner(struct score *score_ptr){
 	if(score_ptr->left_score == 5){
@@ -112,13 +120,13 @@ int main (void){
 /*initialization start*/
 	int score_delay = 0; /*Deactivates ball movement for some time after someone scores*/
 
-	struct ball ball = {ARRAY_WIDTH/2, ARRAY_HEIGHT/2, -1.0, DISTANCE_PER_REFRESH*sqrt(0.5), -DISTANCE_PER_REFRESH*sqrt(0.5), BALL_RADIUS};
+	struct ball ball = {LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2, -1.0, DISTANCE_PER_REFRESH * sqrt(0.5), -DISTANCE_PER_REFRESH * sqrt(0.5), BALL_RADIUS};
 	struct ball *ball_ptr = &ball;
 
-	struct paddle left_paddle = {HORIZONTAL_MARGIN+PADDLE_WIDTH+3, ARRAY_HEIGHT/2-PADDLE_HEIGHT/2, PADDLE_HEIGHT, PADDLE_WIDTH};
+	struct paddle left_paddle = {LEFT_MARGIN + PADDLE_WIDTH + 3, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2, PADDLE_HEIGHT, PADDLE_WIDTH};
 	struct paddle *left_paddle_ptr = &left_paddle;
 
-	struct paddle right_paddle = {HORIZONTAL_END-PADDLE_WIDTH-3, ARRAY_HEIGHT/2-PADDLE_HEIGHT/2, PADDLE_HEIGHT, PADDLE_WIDTH};
+	struct paddle right_paddle = {RIGHT_END - PADDLE_WIDTH - 3, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2, PADDLE_HEIGHT, PADDLE_WIDTH};
 	struct paddle *right_paddle_ptr = &right_paddle;
 
 	struct score score = {0, 0};
@@ -154,8 +162,8 @@ int main (void){
 				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
 			
 				/*Checking if the ball hit the left edge of the screen:*/
-				if((int) (ball_ptr->x_coord + 0.5) - ball_ptr->radius < HORIZONTAL_MARGIN){
-					score_ptr->left_score++; //Also change displayed score
+				if((int)(ball_ptr->x_coord + 0.5 - ball_ptr->radius) < LEFT_MARGIN){
+					score_ptr->left_score++; /*Also change displayed score*/
 					if(score_ptr->left_score == 5){
 						break; /*Goes to display_winner()*/
 					}
@@ -170,8 +178,8 @@ int main (void){
 				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
 
 				/*Checking if the ball hit the left edge of the screen:*/
-				if((int) (ball_ptr->x_coord + 0.5) + ball_ptr->radius > HORIZONTAL_END){
-					score_ptr->right_score++; //Also change displayed score
+				if((int) (ball_ptr->x_coord + 0.5 + ball_ptr->radius) > RIGHT_END){
+					score_ptr->right_score++; /*Also change displayed score*/
 					if(score_ptr->right_score == 5){
 						break; /*Goes to display_winner()*/
 					}
