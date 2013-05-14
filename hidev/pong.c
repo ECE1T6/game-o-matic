@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
-
-//Every other size or position value is based on the following. We might add or remove some as we write the program.
-#define ARRAY_HEIGHT  48.0
-#define ARRAY_WIDTH  64.0
-#define TOP_MARGIN  0.0 //The margins bound the playable space in the array -- they might hold things like score
+//#include <windows.h>
+/*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
+#define ARRAY_HEIGHT  48
+#define ARRAY_WIDTH  64
+#define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
 #define BOTTOM_MARGIN  0.0
 #define LEFT_MARGIN  0.0
 #define RIGHT_MARGIN  0.0
@@ -37,6 +37,20 @@ struct score{
 	int right_score;
 };
 
+void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+    int i, j;
+    for(i = 0; i < ARRAY_HEIGHT; i++){
+        for(j = 0; j < ARRAY_WIDTH; j++){
+            if(array[i][j] == true){
+                printf(" #", array[i][j]);
+            }
+            else{
+                printf("  ", array[i][j]);
+            }
+        }
+        printf("\n");
+    }
+}
 void draw_ball(struct ball *ball_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
 	int i, j;
 	for(j = 2*ball_ptr->radius; j>=0; j--){
@@ -51,19 +65,19 @@ void draw_ball(struct ball *ball_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], boo
 		}
 	}
 }
-void draw_left_paddle(struct ball *left_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
+void draw_left_paddle(struct paddle *left_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
 	int i, j;
 	for(j = left_paddle_ptr->height-1; j>=0; j--){
 		for(i = left_paddle_ptr->width-1; i>=0; i--){
-			array[ball_ptr->y_coord+j][ball_ptr->x_coord-i] = boolean;
+			array[(int) (left_paddle_ptr->y_coord + 0.5) + j][(int) (left_paddle_ptr->x_coord + 0.5) - i] = boolean;
 		}
 	}
 }
-void draw_right_paddle(struct ball *right_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
+void draw_right_paddle(struct paddle *right_paddle_ptr, bool array[ARRAY_HEIGHT][ARRAY_WIDTH], bool boolean){
 	int i, j;
 	for(j = right_paddle_ptr->height-1; j>=0; j--){
 		for(i = right_paddle_ptr->width-1; i>=0; i--){
-			array[ball_ptr->y_coord+j][ball_ptr->x_coord+i] = boolean;
+			array[(int) (right_paddle_ptr->y_coord + 0.5) + j][(int) (right_paddle_ptr->x_coord + 0.5) + i] = boolean;
 		}
 	}
 }
@@ -84,7 +98,7 @@ void check_left_paddle_impact(struct ball *ball_ptr, struct paddle *left_paddle_
 	/*Checking if the ball hit the inner side of left_paddle: (two conditions for vertical position, one checking if impact occurred this cycle*/
 	if(ball_impact_y_coord + ball_ptr->radius >= left_paddle_ptr->y_coord
 	&& ball_impact_y_coord - ball_ptr->radius <= left_paddle_ptr->y_coord + left_paddle_ptr->height - 1
-	&& ball_ptr->x_coord - ball_ptr->delta_x - ball_ptr->radius >= left_paddle_ptr->x_coord){ 
+	&& ball_ptr->x_coord - ball_ptr->delta_x - ball_ptr->radius >= left_paddle_ptr->x_coord){
 		/*These ignore imparted paddle momentum right now:*/
 		ball_ptr->x_coord = left_paddle_ptr->x_coord + (left_paddle_ptr->x_coord - ball_ptr->x_coord);
 		ball_ptr->delta_x *= -1;
@@ -118,9 +132,9 @@ void display_winner(struct score *score_ptr){
 
 int main (void){
 /*initialization start*/
-	int score_delay = 0; /*Deactivates ball movement for some time after someone scores*/
+	int score_delay = 10; /*Deactivates ball movement for some time after someone scores*/
 
-	struct ball ball = {LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2, -1.0, DISTANCE_PER_REFRESH * sqrt(0.5), -DISTANCE_PER_REFRESH * sqrt(0.5), BALL_RADIUS};
+	struct ball ball = {LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2, 1.0, DISTANCE_PER_REFRESH * sqrt(0.5), -DISTANCE_PER_REFRESH * sqrt(0.5), BALL_RADIUS};
 	struct ball *ball_ptr = &ball;
 
 	struct paddle left_paddle = {LEFT_MARGIN + PADDLE_WIDTH + 3, TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2, PADDLE_HEIGHT, PADDLE_WIDTH};
@@ -133,34 +147,33 @@ int main (void){
 	struct score *score_ptr = &score;
 
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
+
 /*initialization end*/
 /*game start*/
 	while (1){
 		/*sleep function using REFRESH_DELAY*/
-		
+
 		/*Erase paddles from array:*/
 		draw_left_paddle(left_paddle_ptr, array, false);
 		draw_right_paddle(right_paddle_ptr, array, false);
-		
+
 		/*gather input and move paddles*/
-		
+
 		if (score_delay > 0){
 			score_delay--;
 		}
 		else if(score_delay == 0){
 			draw_ball(ball_ptr, array, false); /*Erase ball from array*/
-
 			ball_ptr->y_coord += ball_ptr->delta_y;
 			ball_ptr->x_coord += ball_ptr->delta_x;
-
 			check_wall_deflection(ball_ptr);
-		
+
 			if(ball_ptr->x_coord - ball_ptr->radius < left_paddle_ptr->x_coord){ /*The ball has pierced the plane of left_paddle*/
-			
-				check_left_paddle_side_deflect(ball_ptr, left_paddle_ptr);
-			
+
+				check_left_paddle_impact(ball_ptr, left_paddle_ptr);
+
 				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
-			
+
 				/*Checking if the ball hit the left edge of the screen:*/
 				if((int)(ball_ptr->x_coord + 0.5 - ball_ptr->radius) < LEFT_MARGIN){
 					score_ptr->left_score++; /*Also change displayed score*/
@@ -172,8 +185,7 @@ int main (void){
 				}
 			}
 			else if(ball_ptr->x_coord + ball_ptr->radius >= right_paddle_ptr->x_coord){ /*The ball has pierced the plane of right_paddle*/
-			
-				check_right_paddle_side_deflect(ball_ptr, right_paddle_ptr);
+                check_right_paddle_impact(ball_ptr, right_paddle_ptr);
 
 				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
 
@@ -193,7 +205,11 @@ int main (void){
 		draw_left_paddle(left_paddle_ptr, array, true);
 		draw_right_paddle(right_paddle_ptr, array, true);
 
-        	/*pass array to higher level function*/
+        //print_test(array);
+        //Sleep(35);
+        //system("cls");
+
+        /*pass array to higher level function*/
 
 	}
 	display_winner(score_ptr);
