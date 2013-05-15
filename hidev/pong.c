@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
+#include <unistd.h>
 //#include <windows.h>
 
 #define ARRAY_HEIGHT  48
@@ -202,7 +203,9 @@ int main (void){
 		draw_left_paddle(left_paddle_ptr, array, true);
 		draw_right_paddle(right_paddle_ptr, array, true);
 
-        //print_test(array);
+        print_test(array);
+	usleep(35000);
+	system("clear");
         //Sleep(35);
         //system("cls");
 
