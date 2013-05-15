@@ -57,11 +57,12 @@ int flushRowRegisters(void) { //clears all data from shift registers (but doesn'
 }
 
 
-void* printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
-	for(int x = 0; x < 8; x++) { //making assumption of matrix form matrixPtr[x][y]
+void printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
+	int x, y;
+	for(x = 0; x < 8; x++) { //making assumption of matrix form matrixPtr[x][y]
 		flushRowRegisters();
-		for(int y = 0;y < 8; y--) {
-			if (matrixPtr[x][y] == "true") {
+		for(y = 0;y < 8; y--) {
+			if (matrixPtr[x][y] == true){
 				digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
 			}
 			else digitalWrite(1, LOW);
@@ -76,7 +77,7 @@ void* printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
 	return;
 }
 //#### IMPLEMENTATION of printScreen : ###
-int printScreenImplement(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+void* printScreenImplement(bool matrixPtr){//matrixPtr points to a bool 8x8 2-d array.
 	flushAllRegisters(); 
 	while(1) {
 		printScreen(matrixPtr);
@@ -118,7 +119,7 @@ int main (void){
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
 	int x=0, y=0;
 /*initialization end*/
-	pthread_create(&(tid[1]), NULL, &printScreenImplement(array), NULL);
+	pthread_create(&(tid[0]), NULL, &printScreenImplement(array), NULL);
 	while (1){
 	cleanArray(y,x,array);
 	if (y==8)y=0;
