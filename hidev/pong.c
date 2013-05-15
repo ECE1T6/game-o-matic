@@ -203,9 +203,9 @@ int main (void){
 		draw_left_paddle(left_paddle_ptr, array, true);
 		draw_right_paddle(right_paddle_ptr, array, true);
 
-        print_test(array);
-	usleep(35000);
-	system("clear");
+        //print_test(array);
+	//usleep(35000);
+	//system("clear");
         //Sleep(35);
         //system("cls");
 
