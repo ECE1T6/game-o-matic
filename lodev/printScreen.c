@@ -12,14 +12,14 @@ int xClock(void) {
 }
 
 int yClock(void) {
-	digitalWrite(4,HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
-	digitalWrite(4,LOW);
+	digitalWrite(4, HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
+	digitalWrite(4, LOW);
 	return;
 }
 
-int outputToScreen(void){
-	digitalWrite(2,HIGH); //2 = "pin two" on RasPi --> x- & y-"latch" pin set
-	digitalWrite(2,LOW);
+int outputToScreen(void) {
+	digitalWrite(2, HIGH); //2 = "pin two" on RasPi --> x- & y-"latch" pin set
+	digitalWrite(2, LOW);
 }
 
 int flushAllRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
