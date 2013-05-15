@@ -49,12 +49,12 @@ int main (void){
 
 	while (1){
 	cleanArray(y,x,array);
-	if (x<8){
-		x++;
+	if (y==8)y=0;
+	if (x<8)x++;
+	else{ x=0;
 		if(y<8)y++;
 		else y=0;
 	}
-	if (y==8)y=0;
 	updateArray(y,x,array);
 	//printScreen(array); //prints to LED matrix
         print_test(array);
