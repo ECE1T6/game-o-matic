@@ -1,4 +1,3 @@
-
 //#include "stdafx.h" //have this for C++
 //#include "targetver.h" //have this for C++
 #include <stdio.h>
