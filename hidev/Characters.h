@@ -1,4 +1,4 @@
-#define CHAR_NUM [10][7][5] {//Tell me if I'm wrong but I don't think this should be in a text file, although it can be
+#define CHAR_NUM [10][7][5] {//I KNOW THIS DOESN'T WORK
 {
 {0,1,1,1,0},
 {1,0,0,0,1},
