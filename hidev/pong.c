@@ -1,33 +1,35 @@
+//#include "stdafx.h"
+//#include "targetver.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
 //#include <unistd.h>
 #include <windows.h>
 
-#define ARRAY_HEIGHT  48.0
-#define ARRAY_WIDTH  64.0
+#define ARRAY_HEIGHT 48
+#define ARRAY_WIDTH 64
 
-#define BALL_RADIUS  1.0 /*A 3x3 square has radius 1, 5x5 has radius 2, etc.*/
+#define BALL_RADIUS 1.0 /*A 3x3 square has radius 1, 5x5 has radius 2, etc.*/
 
-#define TOP_MARGIN  (0.0 + BALL_RADIUS) /*The margins bound the area where the centre of the ball can be.*/
-#define BOTTOM_MARGIN  (0.0 + BALL_RADIUS) /*The first number may be modified.*/
-#define LEFT_MARGIN  0.0
-#define RIGHT_MARGIN  0.0
+#define TOP_MARGIN (0.0 + BALL_RADIUS) /*The margins bound the area where the centre of the ball can be.*/
+#define BOTTOM_MARGIN (0.0 + BALL_RADIUS) /*The first number may be modified.*/
+#define LEFT_MARGIN 0.0
+#define RIGHT_MARGIN 0.0
 
-#define BOTTOM_END  (ARRAY_HEIGHT - BOTTOM_MARGIN - 1)
-#define RIGHT_END  (ARRAY_WIDTH - RIGHT_MARGIN - 1)
+#define BOTTOM_END (ARRAY_HEIGHT - BOTTOM_MARGIN - 1)
+#define RIGHT_END (ARRAY_WIDTH - RIGHT_MARGIN - 1)
 
-#define PADDLE_HEIGHT  8.0
-#define PADDLE_WIDTH  2.0
+#define PADDLE_HEIGHT 8.0
+#define PADDLE_WIDTH 2.0
 
-#define LEFT_PADDLE_X_COORD  (LEFT_MARGIN + PADDLE_WIDTH + 3.0 + 1.0) /*Refers to the innermost pixel on the top of the paddle.*/
-#define RIGHT_PADDLE_X_COORD  (RIGHT_END - PADDLE_WIDTH - 3.0 + 1.0)
+#define LEFT_PADDLE_X_COORD (LEFT_MARGIN + PADDLE_WIDTH + 3.0 + 1.0) /*Refers to the innermost pixel on the top of the paddle.*/
+#define RIGHT_PADDLE_X_COORD (RIGHT_END - PADDLE_WIDTH - 3.0 + 1.0)
 
-#define LEFT_IMPACT_X_COORD  (LEFT_MARGIN + PADDLE_WIDTH + 3.0 + 1.0 + BALL_RADIUS)
-#define RIGHT_IMPACT_X_COORD  (ARRAY_WIDTH - RIGHT_MARGIN - 1.0 - PADDLE_WIDTH - 3.0 - BALL_RADIUS)
+#define LEFT_IMPACT_X_COORD (LEFT_MARGIN + PADDLE_WIDTH + 3.0 + 1.0 + BALL_RADIUS)
+#define RIGHT_IMPACT_X_COORD (ARRAY_WIDTH - RIGHT_MARGIN - 1.0 - PADDLE_WIDTH - 3.0 - BALL_RADIUS)
 
-#define REFRESH_DELAY  10
-#define DISTANCE_PER_REFRESH  1.0
+#define REFRESH_DELAY 10
+#define DISTANCE_PER_REFRESH 1.0
 
 struct ball{
 	float x_coord; /*The coordinates are rounded for output, but floats let us keep track of movement more accurately.*/
@@ -45,13 +47,13 @@ void print_test(bool array[(int)ARRAY_HEIGHT][(int)ARRAY_WIDTH]){
 	for(i = 0; i < ARRAY_HEIGHT; i++){
 		for(j = 0; j < ARRAY_WIDTH; j++){
 			if(array[i][j] == true){
-				printf(" #", array[i][j]);
+				printf("O", array[i][j]);
 			}
 			else{
-				printf("  ", array[i][j]);
+				printf("*", array[i][j]);
 			}
 		}
-	printf("\n");
+		printf("\n");
 	}
 }
 /*This could likely be improved to minimize calculations.*/
@@ -59,9 +61,9 @@ void draw_ball(struct ball *ball_ptr, bool array[(int)ARRAY_HEIGHT][(int)ARRAY_W
 	int i, j;
 	int displayed_x_coord = (int) (ball_ptr->x_coord + 0.5);
 	int displayed_y_coord = (int) (ball_ptr->y_coord + 0.5);
-	for(j = -BALL_RADIUS; j <= BALL_RADIUS; j++){
-		for(i = -BALL_RADIUS; i <= BALL_RADIUS; i++){
-			if(displayed_x_coord + j <= RIGHT_END && displayed_x_coord + j >= LEFT_MARGIN){
+	for(j = -BALL_RADIUS; j < BALL_RADIUS; j++){
+		for(i = -BALL_RADIUS; i < BALL_RADIUS; i++){
+			if(displayed_x_coord + j < RIGHT_END && displayed_x_coord + j > LEFT_MARGIN){
 				array[displayed_y_coord + i][displayed_x_coord + j] = boolean;
 			}
 		}
@@ -71,7 +73,7 @@ void draw_left_paddle(float left_paddle_y_coord, bool array[(int)ARRAY_HEIGHT][(
 	int i, j;
 	int displayed_y_coord = (int) (left_paddle_y_coord + 0.5);
 	for(j = PADDLE_HEIGHT - 1; j >= 0; j--){
-		for(i = PADDLE_WIDTH - 1; i >= 0; i--){
+		for(i = PADDLE_WIDTH ; i >= 1; i--){
 			array[displayed_y_coord + j][(int) LEFT_PADDLE_X_COORD - i] = boolean;
 		}
 	}
@@ -80,7 +82,7 @@ void draw_right_paddle(float right_paddle_y_coord, bool array[(int)ARRAY_HEIGHT]
 	int i, j;
 	int displayed_y_coord = (int) (right_paddle_y_coord + 0.5);
 	for(j = PADDLE_HEIGHT - 1; j >= 0; j--){
-		for(i = PADDLE_WIDTH - 1; i >= 0; i--){
+		for(i = PADDLE_WIDTH-2 ; i >= -1; i--){
 			array[displayed_y_coord + j][(int) RIGHT_PADDLE_X_COORD + i] = boolean;
 		}
 	}
@@ -99,22 +101,22 @@ void check_left_paddle_impact(struct ball *ball_ptr, float left_paddle_y_coord){
 	int ball_impact_y_coord = ball_ptr->y_coord + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord) * - ball_ptr->delta_y / ball_ptr->delta_x;
 	/*Checking if the ball hit the inner side of left_paddle: (two conditions for vertical position, one checking if impact occurred this cycle*/
 	if(ball_impact_y_coord + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord) * - ball_ptr->delta_y / ball_ptr->delta_x + BALL_RADIUS >= left_paddle_y_coord
-	&& ball_impact_y_coord + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord) * - ball_ptr->delta_y / ball_ptr->delta_x - BALL_RADIUS <= left_paddle_y_coord + PADDLE_HEIGHT - 1
-	&& ball_ptr->x_coord - ball_ptr->delta_x >= LEFT_IMPACT_X_COORD){
-		/*These ignore imparted paddle momentum right now:*/
-		ball_ptr->x_coord = LEFT_IMPACT_X_COORD + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord);
-		ball_ptr->delta_x *= - 1;
+		&& ball_impact_y_coord + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord) * - ball_ptr->delta_y / ball_ptr->delta_x - BALL_RADIUS <= left_paddle_y_coord + PADDLE_HEIGHT - 1
+		&& ball_ptr->x_coord - ball_ptr->delta_x >= LEFT_IMPACT_X_COORD){
+			/*These ignore imparted paddle momentum right now:*/
+			ball_ptr->x_coord = LEFT_IMPACT_X_COORD + (LEFT_IMPACT_X_COORD - ball_ptr->x_coord);
+			ball_ptr->delta_x *= - 1;
 	}
 }
 void check_right_paddle_impact(struct ball *ball_ptr, float right_paddle_y_coord){
 	int ball_impact_y_coord = ball_ptr->y_coord - (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD) * ball_ptr->delta_y / ball_ptr->delta_x;
 	/*Checking if the ball hit the inner side of right_paddle: (two conditions for vertical position, one checking if impact occurred this cycle)*/
 	if(ball_impact_y_coord + (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD) * ball_ptr->delta_y / ball_ptr->delta_x + BALL_RADIUS >= right_paddle_y_coord
-	&& ball_impact_y_coord + (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD) * ball_ptr->delta_y / ball_ptr->delta_x - BALL_RADIUS <= right_paddle_y_coord + PADDLE_HEIGHT - 1
-	&& ball_ptr->x_coord - ball_ptr->delta_x <= RIGHT_IMPACT_X_COORD){
-	    /*These ignore imparted paddle momentum right now:*/
-		ball_ptr->x_coord = RIGHT_IMPACT_X_COORD - (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD);
-		ball_ptr->delta_x *= - 1;
+		&& ball_impact_y_coord + (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD) * ball_ptr->delta_y / ball_ptr->delta_x - BALL_RADIUS <= right_paddle_y_coord + PADDLE_HEIGHT - 1
+		&& ball_ptr->x_coord - ball_ptr->delta_x <= RIGHT_IMPACT_X_COORD){
+			/*These ignore imparted paddle momentum right now:*/
+			ball_ptr->x_coord = RIGHT_IMPACT_X_COORD - (ball_ptr->x_coord - RIGHT_IMPACT_X_COORD);
+			ball_ptr->delta_x *= - 1;
 	}
 }
 void reset_ball(struct ball *ball_ptr){
@@ -146,7 +148,7 @@ int main (void){
 
 	int score_delay = 10; /*Deactivates ball movement for some time after someone scores*/
 
-/*game start*/
+	/*game start*/
 	while (1){
 		/*sleep function using REFRESH_DELAY*/
 
@@ -186,7 +188,7 @@ int main (void){
 
 				/*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
 
-                /*Checking if the ball hit the left edge of the screen:*/
+				/*Checking if the ball hit the left edge of the screen:*/
 				if(ball_ptr->x_coord > RIGHT_END){
 					score_ptr->right_score++; /*Also change displayed score*/
 					if(score_ptr->right_score == 5){
@@ -202,16 +204,16 @@ int main (void){
 		draw_left_paddle(left_paddle_y_coord, array, true);
 		draw_right_paddle(right_paddle_y_coord, array, true);
 
-        print_test(array);
-        //usleep(35000);
-        //system("clear");
-        //Sleep(25);
-        system("cls");
+		print_test(array);
+		//usleep(35000);
+		//system("clear");
+		//Sleep(25);
+		system("cls");
 
-        /*pass array to higher level function*/
+		/*pass array to higher level function*/
 
 	}
 	display_winner(score_ptr);
-/*game end*/
+	/*game end*/
 	return 0;
 }
