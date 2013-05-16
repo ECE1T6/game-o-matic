@@ -17,7 +17,7 @@
 #define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
 
 //### BEGINNING OF printScreen LIBRARY ####
-pthread_t tid[1];
+pthread_t tid;
 
 int xClock(void) {
 	digitalWrite(3, HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
@@ -57,7 +57,7 @@ int flushRowRegisters(void) { //clears all data from shift registers (but doesn'
 }
 
 
-void printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
+void printScreen(bool matrixPtr[ARRAY_HEIGHT][ARRAY_WIDTH]){//scans across screen ONE FULL TIME.
 	int x, y;
 	for(x = 0; x < 8; x++) { //making assumption of matrix form matrixPtr[x][y]
 		flushRowRegisters();
@@ -77,7 +77,7 @@ void printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
 	return;
 }
 //#### IMPLEMENTATION of printScreen : ###
-void* printScreenImplement(bool matrixPtr){//matrixPtr points to a bool 8x8 2-d array.
+void printScreenImplement(bool matrixPtr[ARRAY_HEIGHT][ARRAY_WIDTH]){//matrixPtr points to a bool 8x8 2-d array.
 	flushAllRegisters(); 
 	while(1) {
 		printScreen(matrixPtr);
@@ -119,7 +119,9 @@ int main (void){
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
 	int x=0, y=0;
 /*initialization end*/
-	pthread_create(&(tid[0]), NULL, &printScreenImplement(array), NULL);
+	void (*printPtr)(bool**);
+	printPtr = printScreenImplement;
+	pthread_create(&tid, NULL, printPtr, &array);
 	while (1){
 	cleanArray(y,x,array);
 	if (y==8)y=0;
