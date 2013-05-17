@@ -17,7 +17,6 @@
 #define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
 
 //### BEGINNING OF printScreen LIBRARY ####
-pthread_t tid;
 
 int xClock(void) {
 	digitalWrite(3, HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
@@ -115,13 +114,14 @@ void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 
 int main (void){
 /*initialization start*/
-
+	pthread_t tid;
+	wiringPiSetup();
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
 	int x=0, y=0;
 /*initialization end*/
-	void (*printPtr)(bool**);
-	printPtr = printScreenImplement;
-	pthread_create(&tid, NULL, printPtr, &array);
+	void (*printPtr)(bool [ARRAY_HEIGHT][ARRAY_WIDTH]);
+	printPtr = &printScreenImplement;
+	pthread_create(&tid, NULL, printPtr(array), NULL);// we need to create a data structure for the second null, and also fix the prototype of the printScreenImplement function (needs to have arg void *)
 	while (1){
 	cleanArray(y,x,array);
 	if (y==8)y=0;

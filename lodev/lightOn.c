@@ -32,6 +32,7 @@ return;
 
 
 int main(int col, int row){
+wiringPiSetup();
 lightOn(col,row);
 return;
 }

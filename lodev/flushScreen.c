@@ -35,6 +35,7 @@ return;
 
 
 int main(void){
+wiringPiSetup();
 flushScreen();
 return;
 }

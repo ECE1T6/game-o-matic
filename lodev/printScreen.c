@@ -43,7 +43,7 @@ int flushRowRegisters(void) { //clears all data from shift registers (but doesn'
 }
 
 
-int printScreen(bool** matrixPtr){//scans across screen ONE FULL TIME.
+int printScreen(bool matrixPtr){//scans across screen ONE FULL TIME.
 	for(int x = 0; x < 8; x++) { //making assumption of matrix form matrixPtr[x][y]
 		flushRowRegisters();
 		for(int y = 0;y < 8; y--) {
@@ -63,7 +63,8 @@ int printScreen(bool** matrixPtr){//scans across screen ONE FULL TIME.
 }
 
 
-int main(bool** matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+int main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+	wiringPiSetup();
 	flushAllRegisters(); 
 	while(1) {
 		printScreen(matrixPtr);
