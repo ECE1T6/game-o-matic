@@ -11,6 +11,23 @@
 
 //add period, comma, semicolon, colon, apostrophe, quote, exclamation, question, asterix, hashtag, etc.
 bool board[48][64] = {false};
+
+/*
+x1,y1: top left pixel
+x2,y2: bottom right pixel
+xNew,yNew: new top left pixel location to be translated
+*/
+void translateBox(int x1, int y1, int x2, int y2, int xNew, int yNew){
+}
+/*
+rotates 90degrees clockwise
+*/
+void rotateClockwise(int x1,int y1, int x2, int y2){
+}
+void skewHorizontal(int x1, int y1, int x2, int y2, int factor){
+}
+void skewVertical(int x1, int y1, int x2, int y2, int factor){
+}
 void stretchHorizontal(int x1, int y1, int x2, int y2, int scale){
 	bool** temp;
 	temp = (bool**) malloc((x2-x1)*scale*sizeof(bool*));
