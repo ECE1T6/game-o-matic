@@ -1,5 +1,4 @@
-// writeBoard.cpp : Defines the entry point for the console application.
-//
+
 //#include "stdafx.h" //have this for C++
 //#include "targetver.h" //have this for C++
 #include "characters.h"
@@ -12,29 +11,69 @@
 //add period, comma, semicolon, colon, apostrophe, quote, exclamation, question, asterix, hashtag, etc.
 bool board[48][64] = {false};
 
+
+bool** makeArray(int arraySizeX, int arraySizeY) {  
+	bool** theArray;  
+	theArray = (bool**) malloc(arraySizeX*sizeof(bool*));  
+	for (int i = 0; i < arraySizeX; i++){
+		theArray[i] = (bool*) malloc(arraySizeY*sizeof(bool)); 
+	}
+	return theArray;  
+}   
 /*
 x1,y1: top left pixel
 x2,y2: bottom right pixel
 xNew,yNew: new top left pixel location to be translated
 */
 void translateBox(int x1, int y1, int x2, int y2, int xNew, int yNew){
+	bool** temp = makeArray((x2-x1)*4 , (y2-y1)*4);
+
+	for(int i=0;i<(y2-y1);i++){
+		for(int j=0;j<(x2-x1);j++){
+			temp[i][j]=board[y1+i][x1+j];
+		}
+	}
+	
+	for(int i = 0; i < (x2-x1) ; i++){//place back into board
+		for(int j = 0; j < (y2-y1); j++){
+			board[yNew+j][xNew+i]= temp [j][i];
+		}			
+	}
+
+	free(temp);
 }
 /*
-rotates 90degrees clockwise
+rotates 90degrees counter clockwise
 */
-void rotateClockwise(int x1,int y1, int x2, int y2){
+void rotateCounterClockwise(int x1,int y1, int x2, int y2){
+	bool** temp;
+
+	if((x2-x1)>(y2-y1)){
+		temp = makeArray((x2-x1)*4,(x2-x1)*4);
+	}
+	else{
+		temp = makeArray((y2-y1)*4,(y2-y1)*4);
+	}
+
+	for(int i=0;i<(y2-y1);i++){//Stretch
+		for(int j=0;j<(x2-x1);j++){
+			temp[i][j]=board[y1+i][x1+j];
+		}
+	}
+
+	for(int i = 0; i < (x2-x1) ; i++){//place back into board
+		for(int j = 0; j < (y2-y1); j++){
+			board[y1+j][x1+i]= temp [i][j];
+		}			
+	}
+	free(temp);
 }
 void skewHorizontal(int x1, int y1, int x2, int y2, int factor){
 }
 void skewVertical(int x1, int y1, int x2, int y2, int factor){
 }
 void stretchHorizontal(int x1, int y1, int x2, int y2, int scale){
-	bool** temp;
-	temp = (bool**) malloc((x2-x1)*scale*sizeof(bool*));
-	for (int i = 0; i < (x2-x1)*scale; i++){
-		temp[i] = (bool*) malloc((y2-y1)*scale*sizeof(bool));
-	}
-
+	bool** temp = makeArray((x2-x1)*(scale+1),(y2-y1)*(scale+1));
 
 	for(int i=0;i<(y2-y1);i++){//Stretch
 		for(int j=0;j<(x2-x1);j++){
@@ -47,7 +86,7 @@ void stretchHorizontal(int x1, int y1, int x2, int y2, int scale){
 			temp[i][j]=temp[i][(j/scale)*scale];
 		}
 	}
-		
+
 	for(int i = 0; i < (x2-x1)*scale ; i++){//place back into board
 		for(int j = 0; j < (y2-y1); j++){
 			board[y1+j][x1+i]= temp [j][i];
@@ -56,12 +95,7 @@ void stretchHorizontal(int x1, int y1, int x2, int y2, int scale){
 	free(temp);
 }
 void stretchVertical(int x1, int y1, int x2, int y2, int scale){
-	bool** temp;
-	temp = (bool**) malloc((x2-x1)*scale*sizeof(bool*));
-	for (int i = 0; i < (x2-x1)*scale; i++){
-		temp[i] = (bool*) malloc((y2-y1)*scale*sizeof(bool));
-	}
-
+	bool** temp = makeArray((x2-x1)*(scale+1),(y2-y1)*(scale+1));
 
 	for(int i=0;i<(x2-x1);i++){
 		for(int j=0;j<(y2-y1);j++){
@@ -145,7 +179,10 @@ bool drawChar( char c, int x, int y,int scale){//replace 48 and 64 with a CONST 
 	return 1;
 }
 bool drawString(char* s,int length, int x, int y, int scale){//length is length of string (DEAL WITH IT!!!)
-	//Do I need to malloc it? naw...
+	if (length <= 0)
+	{
+		length = strlen(s);
+	}
 	for(int i=0; i<length; i++){//for loop is... I'm not gonna comment it's kinda obvious actually
 		if(drawChar(s[i],x+6*i*scale,y,scale)){
 			/*IMPORTANT NOTE: the problem with this implementation is it
@@ -178,8 +215,22 @@ int main()//For testing Purposes only
 {
 	bool test;
 
-	test = drawString("ABC",3,0,0,3);
-	printf("%d\n",test);
+	//test = drawString("abc",10,0,0,1);
+
+	//stretchVertical(0,0,6*3,8,2);
+
+	//translateBox(0,0,64,8,10,10);
+
+
+
+	
+	test = drawString("The Quick",-1,0,0,1);
+	test = drawString("Brown fox",-1,0,8,1);
+	test = drawString("Jumped",-1,0,16,1);
+	test = drawString("Over the",-1,0,24,1);
+	test = drawString("Lazy dog",-1,0,32,1);
+	
+	//rotateCounterClockwise(0,0,12,8);
 
 	/*for(int i='A';i<='Z';i++){
 	test = drawChar(i,(i-'A')*6 %60 ,(i-'A')/10 *8,1);
