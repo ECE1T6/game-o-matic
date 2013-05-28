@@ -101,10 +101,6 @@ void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-
 int main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
 	pthread_t tid;
 	pthread_create(&tid, NULL, printScreenImplement, (void *) array);
-	wiringPiSetup();
 	flushAllRegisters(); 
-	while(1) {
-		printScreen(matrixPtr);
-	}
 	return;
 }
