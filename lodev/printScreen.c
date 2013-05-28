@@ -80,7 +80,7 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 		}
 		else xClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
-		usleep(260); // leaves the screen on for a while before the next line is lit = 60fps
+		usleep(520); // leaves the screen on for a while before the next line is lit: 520us = ~120fps for 48x64 matrix 
 	}
 	
 	return;
