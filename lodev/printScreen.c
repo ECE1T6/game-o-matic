@@ -5,24 +5,24 @@
 #include <wiringPi.h>
 #include <unistd.h>
 
-int xClock(void) {
+void xClock(void) {
 	digitalWrite(3, HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
 	digitalWrite(3, LOW);
 	return;
 }
 
-int yClock(void) {
+void yClock(void) {
 	digitalWrite(4, HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
 	digitalWrite(4, LOW);
 	return;
 }
 
-int outputToScreen(void) {
+void outputToScreen(void) {
 	digitalWrite(2, HIGH); //2 = "pin two" on RasPi --> x- & y-"latch" pin set
 	digitalWrite(2, LOW);
 }
 
-int flushAllRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
+void flushAllRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
 	int y = 0, x = 0; //x=cols,y=rows
 	digitalWrite(0, LOW); //0 = "pin zero" on RasPi --> x-"data" pin
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
@@ -33,7 +33,7 @@ int flushAllRegisters(void) { //clears all data from shift registers (but doesn'
 	return;
 }
 
-int flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
+void flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
 	int y = 0; //x=cols,y=rows
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
 	for(y = 0; y <= 64; y++){
@@ -43,25 +43,25 @@ int flushRowRegisters(void) { //clears all data from shift registers (but doesn'
 }
 
 
-int printScreen(bool matrixPtr){//scans downward, across screen ONE FULL TIME.
+void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
 	for(int x = 15; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
 		flushRowRegisters();
 		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[(x+32)][y] == "true") {
+			if (matrixPtr[(x+32)][y] == true) {
 				digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
 			}
 			else digitalWrite(1, LOW);
 			yClock();
 		}
 		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[(x+16)][y] == "true") {
+			if (matrixPtr[(x+16)][y] == true) {
 				digitalWrite(1, HIGH); 
 			}
 			else digitalWrite(1, LOW);
 			yClock();
 		}
 		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[x][y] == "true") {
+			if (matrixPtr[x][y] == true) {
 				digitalWrite(1, HIGH);
 			}
 			else digitalWrite(1, LOW);
@@ -95,12 +95,11 @@ void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-
 		//printf("poops");//uncomment this to verify if the pthread is being created
 		printScreen(matrixPtr);
 	}
-	return;
 }
 
-int main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+void main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
 	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) array);
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr);
 	flushAllRegisters(); 
 	return;
 }
