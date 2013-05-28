@@ -6,7 +6,7 @@
 //#include <printScreen.h> //custom lodev library
 /*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
 #define ARRAY_HEIGHT  8
-#define ARRAY_WIDTH  8
+#define ARRAY_WIDTH  64
 #define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
 #define BOTTOM_MARGIN  0.0
 #define LEFT_MARGIN  0.0
@@ -39,7 +39,7 @@ int flushAllRegisters(void) { //clears all data from shift registers (but doesn'
 	int y = 0, x = 0; //x=cols,y=rows
 	digitalWrite(0, LOW); //0 = "pin zero" on RasPi --> x-"data" pin
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(x = 0; x <= 8; x++) {
+	for(x = 0; x <= 16; x++) {
 		yClock();
 		xClock();
 	}
@@ -124,16 +124,17 @@ int main (void){
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
 	int x=0, y=0;
 /*initialization end*/
-	pthread_create(&tid, NULL, printScreenImplement, (void *) array);// we need to create a data structure for the second null, and also fix the prototype of the printScreenImplement function (needs to have arg void *)
-	while (1){
-	cleanArray(y,x,array);
-	if (x==7 && y==7){x=0;y=0;}
-	else if (x==7 && y<7){x=0;y++;}
-	else if (x<7)x++;
+	pthread_create(&tid, NULL, printScreenImplement, (void *) array);
+	//while (1){
+	x=1;y=1;
+	//cleanArray(y,x,array);
+	//if (x==48 && y==7){x=0;y=0;}
+	//else if (x==48 && y<7){x=0;y++;}
+	//else if (x<48)x++;
 	updateArray(y,x,array);
-        print_test(array);
-	usleep(35000);
-	system("clear");
+       // print_test(array);
+	while (1){usleep(35000);
+	//system("clear");
 
 	}
 	return 0;
