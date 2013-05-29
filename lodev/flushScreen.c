@@ -1,7 +1,6 @@
 //flushScreen.c -- blanks all pixels on a 64x48 screen. Scans from left/top to right/bottom.
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <wiringPi.h>
 
 int xClock(void){

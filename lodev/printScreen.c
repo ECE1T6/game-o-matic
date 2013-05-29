@@ -1,9 +1,10 @@
 //printScreen.c -- prints all required pixels onto a 64x48 screen. Scans in cols from left/top to right/bottom.
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
 #include <wiringPi.h>
 #include <unistd.h>
+#include <pthread.h>
 
 void xClock(void) {
 	digitalWrite(3, HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
@@ -71,7 +72,7 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 				digitalWrite(0, HIGH); //0 = "pin zero" on RasPi --> x-"data" pin
 				xClock();
 				digitalWrite(0, LOW);
-				for (z=0;z<16;z++) xClock();
+				for (int z=0;z<16;z++) xClock();
 			}
 			digitalWrite(0, HIGH);
 			xClock();
@@ -81,7 +82,7 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 		outputToScreen();
 		usleep(520); // leaves the screen on for a while before the next line is lit: 520us = ~120fps for 48x64 matrix 
 	}
-	return;
+return;
 }
 
 void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
