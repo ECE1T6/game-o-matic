@@ -33,7 +33,7 @@ void flushAllRegisters(void) { //clears all data from shift registers (but doesn
 	return;
 }
 
-void flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
+void flushRowRegisters(void) { //empties row registers (doesn't show on screen) -- typically not needed
 	int y = 0; //x=cols,y=rows
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
 	for(y = 0; y <= 64; y++){
@@ -45,7 +45,6 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 
 void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
 	for(int x = 15; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
-		flushRowRegisters();
 		for(int y = 63;y >= 0; y--) {
 			if (matrixPtr[(x+32)][y] == true) {
 				digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
@@ -82,7 +81,6 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 		outputToScreen();
 		usleep(520); // leaves the screen on for a while before the next line is lit: 520us = ~120fps for 48x64 matrix 
 	}
-	
 	return;
 }
 
@@ -92,14 +90,12 @@ void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-
 	matrixPtr[0][0] = (bool*) vptr_value;
 	flushAllRegisters(); 
 	while(1) {
-		//printf("poops");//uncomment this to verify if the pthread is being created
 		printScreen(matrixPtr);
 	}
 }
 
-void main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+int main(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
 	pthread_t tid;
 	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr);
-	flushAllRegisters(); 
-	return;
+	return tid;
 }
