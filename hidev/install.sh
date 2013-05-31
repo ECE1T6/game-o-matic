@@ -5,3 +5,6 @@
 sudo mv pong /etc/init.d/
 sudo chmod +x /etc/init.d/pong 
 sudo update-rc.d pong defaults 
+
+echo "Installed."
+exit 1
