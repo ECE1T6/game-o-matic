@@ -9,8 +9,7 @@ gcc -o displayTestLarge displayTestLarge.c -lwiringPi -std=gnu99
 
 #lowdev libraries
 
-cd ..
-cd lodev
+cd ../lodev
 
 gcc -o flushScreen flushScreen.c -lwiringPi
 gcc -o printScreen printScreen.c -lwiringPi -std=gnu99
