@@ -93,6 +93,9 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 
 void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
 	wiringPiSetup();
+	for (int i = 0; i<=4; i++){
+	pinMode(i, OUTPUT);
+	}
 	bool matrixPtr[48][64];
 	matrixPtr[0][0] = (bool*) vptr_value;
 	flushAllRegisters(); 

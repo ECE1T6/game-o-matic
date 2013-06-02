@@ -34,6 +34,10 @@ return;
 
 
 int main(void){
+wiringPiSetup();
+for (int i = 0; i<=4; i++){
+	pinMode(i, OUTPUT);
+	}
 flushScreen();
 return;
 }
