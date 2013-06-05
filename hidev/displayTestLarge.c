@@ -62,10 +62,7 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
 	for(int x = 47; x >= 0; x-8) { //making assumption of matrix form matrixPtr[x][y]
 		for(int y = 63;y >= 0; y--){
-			if (matrixPtr[x][y] == true){
-				digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
-			}
-			else digitalWrite(1, LOW);
+			digitalWrite(1, matrixPtr[x][y]); //1 = "pin one" on Raspi --> y-"data" pin
 			yClock();
 		}
 		if(x==0){ 
