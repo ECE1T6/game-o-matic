@@ -45,18 +45,9 @@ void flushRowRegisters(void) { //empties row registers (doesn't show on screen) 
 
 
 void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
-	for(int x = 15; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
-		for(int y = 63;y >= 0; y--) {
-			for(int y = 63;y >= 0; y--) {
-			digitalWrite(1, matrixPtr[x+32][y]); //1 = "pin one" on Raspi --> y-"data" pin
-			yClock();
-		}
-		for(int y = 63;y >= 0; y--) {
-			digitalWrite(1, matrixPtr[(x+16)][y]); 
-			yClock();
-		}
-		for(int y = 63;y >= 0; y--) {
-			digitalWrite(1, matrixPtr[x][y]);
+	for(int x = 47; x >= 0; x-8) { //making assumption of matrix form matrixPtr[x][y]
+		for(int y = 63;y >= 0; y--){
+			digitalWrite(1, matrixPtr[x][y]); //1 = "pin one" on Raspi --> y-"data" pin
 			yClock();
 		}
 		if(x==0){ 
@@ -64,7 +55,7 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 				digitalWrite(0, HIGH); //0 = "pin zero" on RasPi --> x-"data" pin
 				xClock();
 				digitalWrite(0, LOW);
-				for (int z=0;z<16;z++) xClock();
+				for (int z=0;z<8;z++) xClock();
 			}
 			digitalWrite(0, HIGH);
 			xClock();
