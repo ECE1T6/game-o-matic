@@ -42,7 +42,7 @@ void flushAllRegisters(void) { //clears all data from shift registers (but doesn
 	int y = 0, x = 0; //x=cols,y=rows
 	digitalWrite(0, LOW); //0 = "pin zero" on RasPi --> x-"data" pin
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(x = 0; x <= 64; x++) {
+	for(x = 0; x <= 8; x++) {
 		yClock();
 		xClock();
 	}
@@ -52,7 +52,7 @@ void flushAllRegisters(void) { //clears all data from shift registers (but doesn
 void flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
 	int y = 0; //x=cols,y=rows
 	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(y = 0; y <= 64; y++){
+	for(y = 0; y <= 8; y++){
 		yClock();
 	}
 	return;
@@ -62,8 +62,7 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 void printScreen(bool (*matrix)[8]){//scans downward, across screen ONE FULL TIME.
 	for(int x = 7; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
 		for(int y = 7;y >= 0; y--){
-			if(matrix[x][y] == true) digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
-			else digitalWrite(1, LOW);
+			digitalWrite(1, (matrix[x][y])); //1 = "pin one" on Raspi --> y-"data" pin
 			yClock();
 			//usleep(10000);
 		}
@@ -104,7 +103,9 @@ void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-
 	bool (*matrixPtr)[8] = (bool (*)[8]) vptr_value;
 	flushAllRegisters(); 
 	while(1) {
+		//print_test(matrixPtr);
 		printScreen(matrixPtr);
+		//system("clear");
 	}
 }
 
@@ -140,9 +141,9 @@ int main (void){
 	else if (x==7 && y<7){x=0;y++;}
 	else if (x<7)x++;
 	updateArray(y,x,array);
-	print_test(arrayPtr);
-	sleep(1);
-	system("clear");
+	//print_test(arrayPtr);
+	usleep(35000);
+	//system("clear");
 	
 		
 	}
