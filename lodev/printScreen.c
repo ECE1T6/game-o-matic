@@ -45,7 +45,7 @@ void flushRowRegisters(void) { //empties row registers (doesn't show on screen) 
 
 
 void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
-	for(int x = 47; x >= 0; x-8) { //making assumption of matrix form matrixPtr[x][y]
+	for(int x = 47; x >= 0; x-=8) { //making assumption of matrix form matrixPtr[x][y]
 		for(int y = 63;y >= 0; y--){
 			digitalWrite(1, matrixPtr[x][y]); //1 = "pin one" on Raspi --> y-"data" pin
 			yClock();
