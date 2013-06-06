@@ -1,4 +1,3 @@
-
 //#include "stdafx.h" //have this for C++
 //#include "targetver.h" //have this for C++
 #include "characters.h"
@@ -8,26 +7,26 @@
 #include <stdbool.h>//have this for C
 
 
-const int CHRCX = 5;
+const int CHRCX = 5;//dimensions of a single character in pixels
 const int CHRCY = 7;
-const int BOARDX = 64;
+const int BOARDX = 64;//total number of pixels in the board
 const int BOARDY = 48;
 bool board[BOARDY][BOARDX] = {false};
 
 
 typedef struct {
-	bool** canvas;
+	bool** canvas;//0's and 1's of the element
 
-	int x;
+	int x;//location of the top left corner of the element in the board
 	int y;
 
-	int width;
+	int width;//dimensions of the element
 	int height;
 
 }drawing;
 
-bool** makeArray(int width, int height) { 
-	width*=30;// I'm sick of this shit
+bool** makeArray(int width, int height) { //mallocs a 2D bool array
+	width*=30;// I"M SICK OF THIS SHIT!!!
 	height*=30;
 
 	bool** a;  
@@ -36,24 +35,34 @@ bool** makeArray(int width, int height) {
 		a[i] = (bool*) malloc(height*sizeof(bool));  
 	return a;  
 }
+/*
+This function adds d2 to the left of d1. This new drawing will be returned.
+
+THIS FUNCTION ONLY WORKS WHEN THE HEIGHTS OF BOTH DRAWINGS IS THE SAME!!!
+
+@param: drawing* d1, drawing* d2
+	two drawings which will be added together
+	
+@return: final drawing
+*/
 drawing* addDrawing(drawing* d1, drawing* d2){
 	drawing* finalD = (drawing*)malloc(sizeof(drawing));
 
-	finalD->x = d1->x + d2->x;
+	finalD->x = d1->x;//sets the location
 	finalD->y = d1->y;
 
-	finalD->width = d1->width + d2->width;
+	finalD->width = d1->width + d2->width;//sets the dimensions
 	finalD->height = d1->height;
 
 	finalD->canvas = makeArray(finalD->width, finalD->height);
 
 
-	for(int i = 0; i < d1->height; i++){
+	for(int i = 0; i < d1->height; i++){//inputs the contents of d1 into the canvas
 		for(int j = 0; j < d1->width; j++){
 			finalD->canvas[i][j]= d1->canvas[i][j];
 		}			
 	}
-	for(int i = 0; i < d1->height; i++){
+	for(int i = 0; i < d1->height; i++){//inputs the contents of d2 into the canvas
 		for(int j = d1->width; j < finalD->width; j++){
 			finalD->canvas[i][j]= d2->canvas[i][j-d1->width];
 		}			
@@ -62,6 +71,11 @@ drawing* addDrawing(drawing* d1, drawing* d2){
 
 	return finalD;
 }
+/*
+insert drawing into the board
+
+@param: drawing* d
+*/
 void insertDrawing(drawing* d){
 	for(int i = 0; i < d->height; i++){
 		for(int j = 0; j < d->width; j++){
@@ -70,24 +84,46 @@ void insertDrawing(drawing* d){
 	}
 }
 
+/*
+Horizontal tanslation of the drawing. positive is to the left
+
+@param: drawing* d
+*/
 void translateHrz(drawing* d, int factor){
 	d->x += factor;
 }
+
+/*
+Vertical tanslation of the drawing. positive is upwards
+
+@param: drawing* d
+*/
 void translateVrt(drawing* d, int factor){
 	d->y += factor;
 }
 
+/*
+Horizontal Mirroring. left goes to right, right goes to left
+
+@param: drawing* d
+*/
 void mirrorHrz(drawing* d){
 	bool temp;
-	for(int i = 0; i < (d->width/2); i++){
+	for(int i = 0; i < (d->width/2); i++){//starting from the left, and going midway
 		for(int j = 0; j < d->height; j++){
-			temp = d->canvas[j][i];
+			temp = d->canvas[j][i];//replace pixels with opposite
 			d->canvas[j][i] = d->canvas[j][d->width-i-1];
 			d->canvas[j][d->width-i-1] = temp;
 		}
 	}
 }
-void mirrorVrt(drawing* d){//top goes to bottom, bottom goes to top
+
+/*
+Vertical Mirroring. top goes to bottom, bottom goes to top.
+
+@param: drawing* d
+*/
+void mirrorVrt(drawing* d){
 	bool temp;
 	for(int i = 0; i <= (d->height/2); i++){
 		for(int j = 0; j<d->width; j++){
@@ -97,27 +133,39 @@ void mirrorVrt(drawing* d){//top goes to bottom, bottom goes to top
 		}
 	}
 }
+
+/*
+Rotates the content clockwise
+
+@param: drawing* d
+*/
 void rotateCw(drawing* d){
-	int max = (d->height>d->width ? d->height:d->width);
+	int max = (d->height>d->width ? d->height:d->width);//which is larger? height or width?
 
 	bool** temp = makeArray(d->height, d->width);//switches width and height when mallocing
 
-	for(int i = 0; i < max; i++){
+	for(int i = 0; i < max; i++){//replaces the columns with rows
 		for(int j = 0; j < max; j++){
 			temp[j][i]=d->canvas[i][j];
 		}
 	}
 
-	bool** clone = d->canvas;
+	bool** clone = d->canvas;// d is now this new drawing
 	d->canvas = temp;
 	free(clone);
 
-	int t = d->width;
+	int t = d->width;//fixes dimensions
 	d->width = d->height;
 	d->height = t;
 
-	mirrorHrz(d);
+	mirrorHrz(d);//this makes it seem as though it is roatated clockwise
 }
+
+/*
+Rotates the content counter clockwise
+
+@param: drawing* d
+*/
 void rotateCcw(drawing* d){
 	int max = (d->height>d->width ? d->height:d->width);
 
@@ -139,27 +187,39 @@ void rotateCcw(drawing* d){
 
 	mirrorVrt(d);
 }
+
+/*
+Stretches Horizontally the content of the drawing by a factor
+
+@param: drawing* d
+*/
 void scaleHrz(drawing* d, int factor){
-	d->width *= factor;
+	d->width *= factor;//fixes dimensions
 
 	bool** temp = makeArray(d->width,d->height );
 
 	for(int i=0;i<d->height;i++){
 		for(int j=0;j<d->width;j++){
-			temp[i][factor*j]=d->canvas[i][j];
+			temp[i][factor*j]=d->canvas[i][j];//this stretches the drawing, but it looks empty
 		}
 	}
 
 	for(int i=0;i<d->height;i++){
 		for(int j=0;j<d->width*factor;j++){
-			temp[i][j]=temp[i][(j/factor)*factor];
+			temp[i][j]=temp[i][(j/factor)*factor];//this fill the empty gaps
 		}
 	}
-
-	bool** clone = d->canvas;
+	
+	bool** clone = d->canvas;//d is now this new drawing
 	d->canvas = temp;
 	free(clone);
 }
+
+/*
+Stretches Vertically the content of the drawing by a factor
+
+@param: drawing* d
+*/
 void scaleVrt(drawing* d, int factor){
 	d->height *= factor;
 
@@ -181,6 +241,12 @@ void scaleVrt(drawing* d, int factor){
 	d->canvas = temp;
 	free(clone);
 }
+
+/*
+Shifts the content of the rectangle into a parallelogram
+
+@param: drawing* d
+*/
 void shearHrz(drawing* d, int factor){
 	
 
@@ -207,6 +273,12 @@ void shearHrz(drawing* d, int factor){
 
 	d->width += factor*(d->height-1);
 }
+
+/*
+Shifts the content of the rectangle into a parallelogram
+
+@param: drawing* d
+*/
 void shearVrt(drawing* d, int factor){
 	bool** temp = makeArray(d->width , d->height+ abs(factor)*(d->width-1));
 
