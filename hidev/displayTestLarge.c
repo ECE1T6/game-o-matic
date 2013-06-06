@@ -59,13 +59,13 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 }
 
 
-void printScreen(bool (*matrix)[64]){//scans downward, across screen ONE FULL TIME.
+void printScreen(bool (*matrix)[8]){//scans downward, across screen ONE FULL TIME.
 	for(int x = 7; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
 		for(int y = 7;y >= 0; y--){
 			if(matrix[x][y] == true) digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
 			else digitalWrite(1, LOW);
 			yClock();
-			usleep(10000);
+			//usleep(10000);
 		}
 		if(x==0){ 
 				digitalWrite(0, HIGH); //0 = "pin zero" on RasPi --> x-"data" pin
@@ -79,7 +79,7 @@ void printScreen(bool (*matrix)[64]){//scans downward, across screen ONE FULL TI
 	return;
 }
 
-void print_test(bool (*array)[64]){
+void print_test(bool (*array)[8]){
     int i, j;
     for(i = 0; i < ARRAY_HEIGHT; i++){
         for(j = 0; j < ARRAY_WIDTH; j++){
@@ -101,18 +101,16 @@ void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-
 	for (int i = 0; i<=4; i++){
 	pinMode(i, OUTPUT);
 	}
-	bool (*matrixPtr)[64] = (bool*) vptr_value;
+	bool (*matrixPtr)[8] = (bool (*)[8]) vptr_value;
 	flushAllRegisters(); 
 	while(1) {
 		printScreen(matrixPtr);
-		print_test(matrixPtr);
-		system("clear");
 	}
 }
 
-int MainScreen(bool (*matrixPtr)[64]){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+int MainScreen(bool (*matrixPtr)[8]){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
 	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr[64]);
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr[8]);
 	return tid;
 }
 
@@ -126,7 +124,7 @@ void cleanArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 void updateArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 	array[x][y] = true;
 	return;
-}pointer to array dereferencing values
+}
 
 int main (void){
 /*initialization start*/
@@ -142,7 +140,11 @@ int main (void){
 	else if (x==7 && y<7){x=0;y++;}
 	else if (x<7)x++;
 	updateArray(y,x,array);
+	print_test(arrayPtr);
 	sleep(1);
+	system("clear");
+	
+		
 	}
 	return 0;
 }
