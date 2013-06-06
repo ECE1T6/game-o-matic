@@ -6,8 +6,8 @@
 #include <pthread.h>
 //#include <printScreen.h> //custom lodev library
 /*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
-#define ARRAY_HEIGHT  48
-#define ARRAY_WIDTH  64
+#define ARRAY_HEIGHT  8
+#define ARRAY_WIDTH  8
 #define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
 #define BOTTOM_MARGIN  0.0
 #define LEFT_MARGIN  0.0
@@ -59,39 +59,18 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 }
 
 
-void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
-	for(int x = 15; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
-		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[x+32][y] == true) {
-				digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
-			}
+void printScreen(bool (*matrix)[64]){//scans downward, across screen ONE FULL TIME.
+	for(int x = 7; x >= 0; x--) { //making assumption of matrix form matrixPtr[x][y]
+		for(int y = 7;y >= 0; y--){
+			if(matrix[x][y] == true) digitalWrite(1, HIGH); //1 = "pin one" on Raspi --> y-"data" pin
 			else digitalWrite(1, LOW);
 			yClock();
-		}
-		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[(x+16)][y] == true) {
-				digitalWrite(1, HIGH); 
-			}
-			else digitalWrite(1, LOW);
-			yClock();
-		}
-		for(int y = 63;y >= 0; y--) {
-			if (matrixPtr[x][y] == true) {
-				digitalWrite(1, HIGH);
-			}
-			else digitalWrite(1, LOW);
-			yClock();
+			usleep(10000);
 		}
 		if(x==0){ 
-			for (int i = 0; i<2; i++){
 				digitalWrite(0, HIGH); //0 = "pin zero" on RasPi --> x-"data" pin
 				xClock();
 				digitalWrite(0, LOW);
-				for (int z=0;z<16;z++) xClock();
-			}
-			digitalWrite(0, HIGH);
-			xClock();
-			digitalWrite(0, LOW);
 		}
 		else xClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
@@ -100,35 +79,7 @@ void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FUL
 	return;
 }
 
-void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
-	wiringPiSetup();
-	bool matrixPtr[48][64];
-	matrixPtr[0][0] = (bool*) vptr_value;
-	flushAllRegisters(); 
-	while(1) {
-		printScreen(matrixPtr);
-	}
-}
-
-int MainScreen(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
-	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr);
-	return tid;
-}
-
-//##### END OF printScreen LIBRARY ####
-
-void cleanArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
-	array[x][y] = false;
-	return;
-}
-
-void updateArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
-	array[x][y] = true;
-	return;
-}
-
-void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+void print_test(bool (*array)[64]){
     int i, j;
     for(i = 0; i < ARRAY_HEIGHT; i++){
         for(j = 0; j < ARRAY_WIDTH; j++){
@@ -145,22 +96,53 @@ void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 }
 
 
+void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
+	wiringPiSetup();
+	for (int i = 0; i<=4; i++){
+	pinMode(i, OUTPUT);
+	}
+	bool (*matrixPtr)[64] = (bool*) vptr_value;
+	flushAllRegisters(); 
+	while(1) {
+		printScreen(matrixPtr);
+		print_test(matrixPtr);
+		system("clear");
+	}
+}
+
+int MainScreen(bool (*matrixPtr)[64]){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
+	pthread_t tid;
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr[64]);
+	return tid;
+}
+
+//##### END OF printScreen LIBRARY ####
+
+void cleanArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+	array[x][y] = false;
+	return;
+}
+
+void updateArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+	array[x][y] = true;
+	return;
+}pointer to array dereferencing values
+
 int main (void){
 /*initialization start*/
-	wiringPiSetup();
+	wiringPiSetup();	//
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
+	bool (*arrayPtr)[ARRAY_WIDTH] = array;
 	int x=0, y=0;
 /*initialization end*/
-	int tid=MainScreen(array);
+	int tid=MainScreen(arrayPtr);
 	while (1){
 	cleanArray(y,x,array);
-	if (x==63 && y==47){x=0;y=0;}
-	else if (x==63 && y<47){x=0;y++;}
-	else if (x<63)x++;
+	if (x==7 && y==7){x=0;y=0;}
+	else if (x==7 && y<7){x=0;y++;}
+	else if (x<7)x++;
 	updateArray(y,x,array);
-        //print_test(array);
-	usleep(35000);
-	//system("clear");
+	sleep(1);
 	}
 	return 0;
 }
