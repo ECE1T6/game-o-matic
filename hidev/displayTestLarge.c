@@ -73,7 +73,7 @@ void flushRowRegisters(void) {
 }
 
 //scans downward, across screen ONE FULL TIME.
-void printScreen(bool (*matrix)[ARRAY_WIDTH]){	
+void printScreen(bool (**matrix)){	
   //making assumption of matrix form matrix[x][y]
   for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
 		for(int x = ARRAY_WIDTH;x >= 0; x--){
@@ -94,7 +94,7 @@ void printScreen(bool (*matrix)[ARRAY_WIDTH]){
 	return;
 }
 
-void print_test(bool (*array)[ARRAY_WIDTH]){
+void print_test(bool (**array)){
     int i, j;
     for(i = 0; i < ARRAY_HEIGHT; i++){
         for(j = 0; j < ARRAY_WIDTH; j++){
@@ -116,15 +116,7 @@ void *printScreenImplement(void *vptr_value) {
 	for (int i = 0; i<=4; i++){
 	pinMode(i, OUTPUT);
 	}
-	bool (*matrix)[ARRAY_WIDTH] = (bool (*)[ARRAY_WIDTH]) vptr_value;
-	bool arrayTest[ARRAY_HEIGHT][ARRAY_WIDTH] = {1,1,1,1,1,1,1,1, /*used for testing thread printing*/
-                                                 1,1,0,0,0,0,1,0,
-                                                 1,0,1,0,0,1,0,0,
-                                                 1,0,0,1,1,0,0,0,
-                                                 1,0,0,1,1,0,0,0,
-                                                 1,0,1,0,0,1,0,0,
-                                                 1,1,0,0,0,0,1,0,
-                                                 1,0,0,0,0,0,0,1};
+	bool (**matrix) = (bool (**)) vptr_value;
 	flushAllRegisters(); 
 	while(1) {
 		//print_test(matrix);
@@ -136,20 +128,20 @@ void *printScreenImplement(void *vptr_value) {
 //matrix points to a bool 2-d array. 
 //Points containing true interpreted on, false is off.
 
-int MainScreen(bool (*matrix)[ARRAY_WIDTH]){
+int MainScreen(bool (**matrix)){
   pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix[ARRAY_WIDTH]);
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix);
 	return tid;
 }
 
 //##### END OF printScreen LIBRARY ####
 
-void cleanArray(int y, int x, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+void cleanArray(int y, int x, bool (**array)){
 	array[y][x] = false;
 	return;
 }
 
-void updateArray(int y, int x, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+void updateArray(int y, int x, bool (**array)){
 	array[y][x] = true;
 	return;
 }
@@ -157,28 +149,28 @@ void updateArray(int y, int x, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 int main (void){
   /*initialization start*/
 	wiringPiSetup();	//
-	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
-	bool arrayTest[ARRAY_HEIGHT][ARRAY_WIDTH] = {1,1,1,1,1,1,1,1, /*used for testing thread printing*/
-                                                 1,1,0,0,0,0,1,0,
-                                                 1,0,1,0,0,1,0,0,
-                                                 1,0,0,1,1,0,0,0,
-                                                 1,0,0,1,1,0,0,0,
-                                                 1,0,1,0,0,1,0,0,
-                                                 1,1,0,0,0,0,1,0,
-                                                 1,0,0,0,0,0,0,1};
-	//bool (*arrayPtr)[ARRAY_WIDTH] = array;
+	bool **array;
+	array = (bool**) malloc(ARRAY_HEIGHT*sizeof(bool*));
+	for  (int i=0; i<ARRAY_HEIGHT; i++){
+		array[i] = (bool*) malloc (ARRAY_WIDTH*sizeof(bool));
+	}
+	for (int i=0; i<ARRAY_HEIGHT; i++){
+		for (int j=0; j<ARRAY_WIDTH; j++){
+			array[i][j] = false;
+		}
+	}
 	int x=0, y=0;
   /*initialization end*/
-	int tid = MainScreen(arrayTest);
+	int tid = MainScreen(array);
 	while (1){
     cleanArray(x,y,array);
     if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
     else if (y == ARRAY_HEIGHT-1 && x < ARRAY_WIDTH-1){y=0;x++;}
     else if (y<ARRAY_HEIGHT-1) y++;
     updateArray(x,y,array);
-    //print_test(arrayPtr);
+   // print_test(array);
     usleep(35000);
-    //system("clear");		
-	}
+   // system("clear");		
+}
 	return 0;
 }
