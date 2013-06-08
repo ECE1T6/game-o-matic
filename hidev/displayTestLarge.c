@@ -5,10 +5,13 @@
 #include <wiringPi.h>
 #include <pthread.h>
 //#include <printScreen.h> //custom lodev library
-/*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
+/*Every other size or position value is based on the following. 
+We might add or remove some as we write the program.*/
 #define ARRAY_HEIGHT  8 //change these to the matrix size
 #define ARRAY_WIDTH  8
-#define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
+#define TOP_MARGIN  0.0 
+/*The margins bound the playable space in the array -- 
+they might hold things like score*/
 #define BOTTOM_MARGIN  0.0
 #define LEFT_MARGIN  0.0
 #define RIGHT_MARGIN  0.0
@@ -25,7 +28,8 @@
 #define ROWCLK 4
 
 //#### BEGINNING OF printScreen LIBRARY ####
-//printScreen.c -- prints all required pixels onto a the screen. Scans in rows from top-to-bottom.
+//printScreen.c -- prints all required pixels onto a the screen. 
+//Scans in rows from top-to-bottom.
 
 void yClock(void) {
 	digitalWrite(COLCLK, HIGH);
@@ -45,18 +49,21 @@ void outputToScreen(void) {
 	return;
 }
 
-void flushAllRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
-	int y = 0, x = 0; //x=#cols,y=#rows
+//clears all data from shift registers (but doesn't show this on screen)
+void flushAllRegisters(void) { 	
+  int y = 0, x = 0; //x=#cols,y=#rows
 	digitalWrite(COL, LOW); 
-	digitalWrite(ROW, LOW); 
-	for(x = 0; x <= ARRAY_WIDTH; x++) { //assuming array is strictly as wide or wider than tall
+	digitalWrite(ROW, LOW);
+  //assuming array is strictly as wide or wider than tall
+	for(x = 0; x <= ARRAY_WIDTH; x++) { 
 		yClock();
 		xClock();
 	}
 	return;
 }
 
-void flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
+//clears all data from shift registers (but doesn't show this on screen)
+void flushRowRegisters(void) { 
 	int x = 0; //x=#cols,y=#rows
 	digitalWrite(ROW, LOW); //1 = "pin one" on Raspi --> x-"data" pin
 	for(x = 0; x <= ARRAY_WIDTH; x++){
@@ -65,11 +72,12 @@ void flushRowRegisters(void) { //clears all data from shift registers (but doesn
 	return;
 }
 
-
-void printScreen(bool (*matrix)[ARRAY_WIDTH]){//scans downward, across screen ONE FULL TIME.
-	for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { //making assumption of matrix form matrixPtr[x][y]
+//scans downward, across screen ONE FULL TIME.
+void printScreen(bool (*matrix)[ARRAY_WIDTH]){	
+  //making assumption of matrix form matrix[x][y]
+  for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
 		for(int x = ARRAY_WIDTH;x >= 0; x--){
-			digitalWrite(1, (matrix[y][x])); //1 = "pin one" on Raspi --> x-"data" pin
+			digitalWrite(ROW, (matrix[y][x])); //1 = "pin one" on Raspi --> x-"data" pin
 			xClock();
 			//usleep(10000);
 		}
@@ -80,8 +88,9 @@ void printScreen(bool (*matrix)[ARRAY_WIDTH]){//scans downward, across screen ON
 		}
 		else yClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
-		usleep(520); // leaves the screen on for a while before the next line is lit = ~60fps
-	}
+		// leaves the screen on for a while before the next line is lit = ~60fps
+    usleep(520); 
+  }
 	return;
 }
 
@@ -101,24 +110,35 @@ void print_test(bool (*array)[ARRAY_WIDTH]){
  return;
 }
 
-
-void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
+//matrix points to a bool 8x8 2-d array.
+void *printScreenImplement(void *vptr_value) {
 	wiringPiSetup();
 	for (int i = 0; i<=4; i++){
 	pinMode(i, OUTPUT);
 	}
-	bool (*matrixPtr)[ARRAY_WIDTH] = (bool (*)[ARRAY_WIDTH]) vptr_value;
+	bool (*matrix)[ARRAY_WIDTH] = (bool (*)[ARRAY_WIDTH]) vptr_value;
+	bool arrayTest[ARRAY_HEIGHT][ARRAY_WIDTH] = {1,1,1,1,1,1,1,1, /*used for testing thread printing*/
+                                                 1,1,0,0,0,0,1,0,
+                                                 1,0,1,0,0,1,0,0,
+                                                 1,0,0,1,1,0,0,0,
+                                                 1,0,0,1,1,0,0,0,
+                                                 1,0,1,0,0,1,0,0,
+                                                 1,1,0,0,0,0,1,0,
+                                                 1,0,0,0,0,0,0,1};
 	flushAllRegisters(); 
 	while(1) {
-		//print_test(matrixPtr);
-		printScreen(matrixPtr);
+		//print_test(matrix);
+		printScreen(matrix);
 		//system("clear");
 	}
 }
 
-int MainScreen(bool (*matrixPtr)[ARRAY_WIDTH]){//matrixPtr points to a bool 2-d array. Points containing true interpreted on, false is off.
-	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr[ARRAY_WIDTH]);
+//matrix points to a bool 2-d array. 
+//Points containing true interpreted on, false is off.
+
+int MainScreen(bool (*matrix)[ARRAY_WIDTH]){
+  pthread_t tid;
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix[ARRAY_WIDTH]);
 	return tid;
 }
 
@@ -135,24 +155,30 @@ void updateArray(int y, int x, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
 }
 
 int main (void){
-/*initialization start*/
+  /*initialization start*/
 	wiringPiSetup();	//
 	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
-	bool (*arrayPtr)[ARRAY_WIDTH] = array;
+	bool arrayTest[ARRAY_HEIGHT][ARRAY_WIDTH] = {1,1,1,1,1,1,1,1, /*used for testing thread printing*/
+                                                 1,1,0,0,0,0,1,0,
+                                                 1,0,1,0,0,1,0,0,
+                                                 1,0,0,1,1,0,0,0,
+                                                 1,0,0,1,1,0,0,0,
+                                                 1,0,1,0,0,1,0,0,
+                                                 1,1,0,0,0,0,1,0,
+                                                 1,0,0,0,0,0,0,1};
+	//bool (*arrayPtr)[ARRAY_WIDTH] = array;
 	int x=0, y=0;
-/*initialization end*/
-	int tid=MainScreen(arrayPtr);
+  /*initialization end*/
+	int tid = MainScreen(arrayTest);
 	while (1){
-	cleanArray(x,y,array);
-	if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
-	else if (y==ARRAY_HEIGHT-1 && x<ARRAY_WIDTH-1){y=0;x++;}
-	else if (y<ARRAY_HEIGHT-1)y++;
-	updateArray(x,y,array);
-	//print_test(arrayPtr);
-	usleep(35000);
-	//system("clear");
-	
-		
+    cleanArray(x,y,array);
+    if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
+    else if (y == ARRAY_HEIGHT-1 && x < ARRAY_WIDTH-1){y=0;x++;}
+    else if (y<ARRAY_HEIGHT-1) y++;
+    updateArray(x,y,array);
+    //print_test(arrayPtr);
+    usleep(35000);
+    //system("clear");		
 	}
 	return 0;
 }
