@@ -1,4 +1,4 @@
-//printScreen.c -- prints all required pixels onto a LED screen. Scans in cols from left/top to right/bottom.
+//printScreen.c -- prints/mux's all required pixels on an LED screen. Scans in rows from top to bottom.
 
 #include <stdio.h>
 #include <stdlib.h>
