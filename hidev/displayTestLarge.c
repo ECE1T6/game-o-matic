@@ -9,16 +9,6 @@
 We might add or remove some as we write the program.*/
 #define ARRAY_HEIGHT  8 //change these to the matrix size
 #define ARRAY_WIDTH  8
-#define TOP_MARGIN  0.0 
-/*The margins bound the playable space in the array -- 
-they might hold things like score*/
-#define BOTTOM_MARGIN  0.0
-#define LEFT_MARGIN  0.0
-#define RIGHT_MARGIN  0.0
-#define DISTANCE_PER_REFRESH  1.0
-
-#define BOTTOM_END  ARRAY_HEIGHT-BOTTOM_MARGIN-1
-#define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
 
 //#### PIN DECLARATIONS ####
 #define	COL 0
