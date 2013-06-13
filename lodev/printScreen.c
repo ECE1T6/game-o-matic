@@ -67,14 +67,13 @@ void printScreen(bool (**matrix)){
 		}
 		if(y==0){ 
 			for (int i = 0; i<2; i++){
-				digitalWrite(COL, HIGH); // y-"data" pin
-				xClock();
-				digitalWrite(COL, LOW);
-				for (int z=0;z<8;z++) xClock();
+				digitalWrite(COL, HIGH); //0 = "pin zero" on RasPi --> y-"data" pin
+				yClock();
+				for (int z=0;z<8;z++) yClock();
 			}
 			digitalWrite(COL, HIGH);
-			xClock();
-			digitalWrite(COL, LOW);
+			yClock();
+				digitalWrite(COL, LOW);
 		}
 		else yClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();

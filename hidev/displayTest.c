@@ -5,116 +5,86 @@
 #include <wiringPi.h>
 #include <pthread.h>
 //#include <printScreen.h> //custom lodev library
-/*Every other size or position value is based on the following. We might add or remove some as we write the program.*/
-#define ARRAY_HEIGHT  48
-#define ARRAY_WIDTH  64
-#define TOP_MARGIN  0.0 /*The margins bound the playable space in the array -- they might hold things like score*/
-#define BOTTOM_MARGIN  0.0
-#define LEFT_MARGIN  0.0
-#define RIGHT_MARGIN  0.0
-#define DISTANCE_PER_REFRESH  1.0
+/*Every other size or position value is based on the following. 
+We might add or remove some as we write the program.*/
+#define ARRAY_HEIGHT  8 //change these to the matrix size
+#define ARRAY_WIDTH  8
 
-#define BOTTOM_END  ARRAY_HEIGHT-BOTTOM_MARGIN-1
-#define RIGHT_END  ARRAY_WIDTH-RIGHT_MARGIN-1
+//#### PIN DECLARATIONS ####
+#define	COL 0
+#define ROW 1
+#define LATCH 2
+#define COLCLK 3
+#define ROWCLK 4
 
-//### BEGINNING OF printScreen LIBRARY ####
-//printScreen.c -- prints all required pixels onto a 64x48 screen. Scans in cols from left/top to right/bottom.
+//#### BEGINNING OF printScreen LIBRARY ####
+//printScreen.c -- prints all required pixels onto a the screen. 
+//Scans in rows from top-to-bottom.
 
-void xClock(void) {
-	digitalWrite(3, HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
-	digitalWrite(3, LOW);
+void yClock(void) {
+	digitalWrite(COLCLK, HIGH);
+	digitalWrite(COLCLK, LOW);
 	return;
 }
 
-void yClock(void) {
-	digitalWrite(4, HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
-	digitalWrite(4, LOW);
+void xClock(void) {
+	digitalWrite(ROWCLK, HIGH);
+	digitalWrite(ROWCLK, LOW);
 	return;
 }
 
 void outputToScreen(void) {
-	digitalWrite(2, HIGH); //2 = "pin two" on RasPi --> x- & y-"latch" pin set
-	digitalWrite(2, LOW);
+	digitalWrite(LATCH, HIGH); 
+	digitalWrite(LATCH, LOW);
 	return;
 }
 
-void flushAllRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
-	int y = 0, x = 0; //x=cols,y=rows
-	digitalWrite(0, LOW); //0 = "pin zero" on RasPi --> x-"data" pin
-	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(x = 0; x <= 64; x++) {
+//clears all data from shift registers (but doesn't show this on screen)
+void flushAllRegisters(void) { 	
+  int y = 0, x = 0; //x=#cols,y=#rows
+	digitalWrite(COL, LOW); 
+	digitalWrite(ROW, LOW);
+  //assuming array is strictly as wide or wider than tall
+	for(x = 0; x <= ARRAY_WIDTH; x++) { 
 		yClock();
 		xClock();
 	}
 	return;
 }
 
-void flushRowRegisters(void) { //clears all data from shift registers (but doesn't show this on screen)
-	int y = 0; //x=cols,y=rows
-	digitalWrite(1, LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(y = 0; y <= 64; y++){
-		yClock();
+//clears all data from shift registers (but doesn't show this on screen)
+void flushRowRegisters(void) { 
+	int x = 0; //x=#cols,y=#rows
+	digitalWrite(ROW, LOW); //1 = "pin one" on Raspi --> x-"data" pin
+	for(x = 0; x <= ARRAY_WIDTH; x++){
+		xClock();
 	}
 	return;
 }
 
-
-void printScreen(bool matrixPtr[48][64]){//scans downward, across screen ONE FULL TIME.
-	for(int x = 47; x >= 0; x-8) { //making assumption of matrix form matrixPtr[x][y]
-		for(int y = 63;y >= 0; y--){
-			digitalWrite(1, matrixPtr[x][y]); //1 = "pin one" on Raspi --> y-"data" pin
-			yClock();
-		}
-		if(x==0){ 
-			for (int i = 0; i<2; i++){
-				digitalWrite(0, HIGH); //0 = "pin zero" on RasPi --> x-"data" pin
-				xClock();
-				digitalWrite(0, LOW);
-				for (int z=0;z<8;z++) xClock();
-			}
-			digitalWrite(0, HIGH);
+//scans downward, across screen ONE FULL TIME.
+void printScreen(bool (**matrix)){	
+  //making assumption of matrix form matrix[x][y]
+  for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
+		for(int x = ARRAY_WIDTH;x >= 0; x--){
+			digitalWrite(ROW, (matrix[y][x])); //1 = "pin one" on Raspi --> x-"data" pin
 			xClock();
-			digitalWrite(0, LOW);
+			//usleep(10000);
 		}
-		else xClock(); //shifts the data over to make sure the proper column is lit
+		if(y==0){ 
+				digitalWrite(COL, HIGH); //0 = "pin zero" on RasPi --> y-"data" pin
+				yClock();
+				digitalWrite(COL, LOW);
+		}
+		else yClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
-		usleep(520); // leaves the screen on for a while before the next line is lit = 60fps
-	}
+		// leaves the screen on for a while before the next line is lit = ~60fps
+    usleep(520); 
+  }
 	return;
 }
 
-void *printScreenImplement(void *vptr_value){//matrixPtr points to a bool 8x8 2-d array.
-	wiringPiSetup();
-	for (int i = 0; i<=4; i++){
-	pinMode(i, OUTPUT);
-	}
-	bool matrixPtr[48][64];
-	matrixPtr[0][0] = (bool*) vptr_value;
-	flushAllRegisters(); 
-	while(1) {
-		printScreen(matrixPtr);
-	}
-}
-
-int MainScreen(bool matrixPtr){//matrixPtr points to a bool 64x48 2-d array. Points containing true interpreted on, false is off.
-	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrixPtr);
-	return tid;
-}
-
-//##### END OF printScreen LIBRARY ####
-
-void cleanArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
-	array[x][y] = false;
-	return;
-}
-
-void updateArray(int x, int y, bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
-	array[x][y] = true;
-	return;
-}
-
-void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
+void print_test(bool (**array)){
     int i, j;
     for(i = 0; i < ARRAY_HEIGHT; i++){
         for(j = 0; j < ARRAY_WIDTH; j++){
@@ -130,23 +100,67 @@ void print_test(bool array[ARRAY_HEIGHT][ARRAY_WIDTH]){
  return;
 }
 
+//matrix points to a bool 8x8 2-d array.
+void *printScreenImplement(void *vptr_value) {
+	wiringPiSetup();
+	for (int i = 0; i<=4; i++){
+	pinMode(i, OUTPUT);
+	}
+	bool (**matrix) = (bool (**)) vptr_value;
+	flushAllRegisters(); 
+	while(1) {
+		//print_test(matrix);
+		printScreen(matrix);
+		//system("clear");
+	}
+}
+
+//matrix points to a bool 2-d array. 
+//Points containing true interpreted on, false is off.
+
+int MainScreen(bool (**matrix)){
+  pthread_t tid;
+	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix);
+	return tid;
+}
+
+//##### END OF printScreen LIBRARY ####
+
+void cleanArray(int y, int x, bool (**array)){
+	array[y][x] = false;
+	return;
+}
+
+void updateArray(int y, int x, bool (**array)){
+	array[y][x] = true;
+	return;
+}
 
 int main (void){
-/*initialization start*/
+  /*initialization start*/
 	wiringPiSetup();	//
-	bool array[ARRAY_HEIGHT][ARRAY_WIDTH] = {false};
-	int x=0, y=0;
-/*initialization end*/
-	int tid=MainScreen(array);
-	while (1){
-	cleanArray(y,x,array);
-	if (x==63 && y==47){x=0;y=0;}
-	else if (x==63 && y<47){x=0;y++;}
-	else if (x<63)x++;
-	updateArray(y,x,array);
-        //print_test(array);
-	usleep(35000);
-	//system("clear");
+	bool **array;
+	array = (bool**) malloc(ARRAY_HEIGHT*sizeof(bool*));
+	for  (int i=0; i<ARRAY_HEIGHT; i++){
+		array[i] = (bool*) malloc (ARRAY_WIDTH*sizeof(bool));
 	}
+	for (int i=0; i<ARRAY_HEIGHT; i++){
+		for (int j=0; j<ARRAY_WIDTH; j++){
+			array[i][j] = false;
+		}
+	}
+	int x=0, y=0;
+  /*initialization end*/
+	int tid = MainScreen(array);
+	while (1){
+    cleanArray(x,y,array);
+    if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
+    else if (y == ARRAY_HEIGHT-1 && x < ARRAY_WIDTH-1){y=0;x++;}
+    else if (y<ARRAY_HEIGHT-1) y++;
+    updateArray(x,y,array);
+   // print_test(array);
+    usleep(35000);
+   // system("clear");		
+}
 	return 0;
 }
