@@ -7,8 +7,8 @@
 //#include <printScreen.h> //custom lodev library
 /*Every other size or position value is based on the following. 
 We might add or remove some as we write the program.*/
-#define ARRAY_HEIGHT  8 //change these to the matrix size
-#define ARRAY_WIDTH  8
+#define ARRAY_HEIGHT  48 //change these to the matrix size
+#define ARRAY_WIDTH  64
 
 //#### PIN DECLARATIONS ####
 #define	COL 0
