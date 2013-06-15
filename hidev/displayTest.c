@@ -4,9 +4,7 @@
 #include <unistd.h>
 #include <wiringPi.h>
 #include <pthread.h>
-//#include <printScreen.h> //custom lodev library
-/*Every other size or position value is based on the following. 
-We might add or remove some as we write the program.*/
+
 #define ARRAY_HEIGHT  48 //change these to the matrix size
 #define ARRAY_WIDTH  64
 
@@ -18,7 +16,6 @@ We might add or remove some as we write the program.*/
 #define ROWCLK 4
 
 //#### BEGINNING OF printScreen LIBRARY ####
-//printScreen.c -- prints all required pixels onto a the screen. 
 //Scans in rows from top-to-bottom.
 
 void yClock(void) {
@@ -55,7 +52,7 @@ void flushAllRegisters(void) {
 //clears all data from shift registers (but doesn't show this on screen)
 void flushRowRegisters(void) { 
 	int x = 0; //x=#cols,y=#rows
-	digitalWrite(ROW, LOW); //1 = "pin one" on Raspi --> x-"data" pin
+	digitalWrite(ROW, LOW); //push in x-data
 	for(x = 0; x <= ARRAY_WIDTH; x++){
 		xClock();
 	}
@@ -64,21 +61,24 @@ void flushRowRegisters(void) {
 
 //scans downward, across screen ONE FULL TIME.
 void printScreen(bool (**matrix)){	
-  //making assumption of matrix form matrix[x][y]
-  for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
-		for(int x = ARRAY_WIDTH;x >= 0; x--){
-			digitalWrite(ROW, (matrix[y][x])); //1 = "pin one" on Raspi --> x-"data" pin
+   for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
+		for(int x = ARRAY_WIDTH-1;x >= 0; x--){
+			digitalWrite(ROW, (matrix[y][x])); //push in x-data
 			xClock();
-			//usleep(10000);
 		}
 		if(y==0){ 
-				digitalWrite(COL, HIGH); //0 = "pin zero" on RasPi --> y-"data" pin
+			for (int i = 1; i<((ARRAY_HEIGHT+7)/8); i++){//used for daisychaining row registers
+				digitalWrite(COL, HIGH); //push in y-data
 				yClock();
-				digitalWrite(COL, LOW);
+				for (int z=0;z<8;z++) yClock();
+			}
+			digitalWrite(COL, HIGH);
+			yClock();
+			digitalWrite(COL, LOW);
 		}
 		else yClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
-		// leaves the screen on for a while before the next line is lit = ~60fps
+		// leave the screen on for a while before the next line is lit; 1040uS = ~120fps 
     usleep(520); 
   }
 	return;

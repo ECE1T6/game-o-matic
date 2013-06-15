@@ -50,7 +50,7 @@ void flushAllRegisters(void) {
 //clears all data from shift registers (but doesn't show this on screen)
 void flushRowRegisters(void) { 
 	int x = 0; //x=#cols,y=#rows
-	digitalWrite(ROW, LOW); //1 = "pin one" on Raspi --> x-"data" pin
+	digitalWrite(ROW, LOW); //push in x-data
 	for(x = 0; x <= ARRAY_WIDTH; x++){
 		xClock();
 	}
@@ -59,25 +59,24 @@ void flushRowRegisters(void) {
 
 //scans downward, across screen ONE FULL TIME.
 void printScreen(bool (**matrix)){	
-  //making assumption of matrix form matrix[x][y]
   for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
 		for(int x = ARRAY_WIDTH-1;x >= 0; x--){
-			digitalWrite(ROW, (matrix[y][x])); //1 = "pin one" on Raspi --> x-"data" pin
+			digitalWrite(ROW, (matrix[y][x])); //push in x-data
 			xClock();
 		}
 		if(y==0){ 
-			for (int i = 0; i<2; i++){
-				digitalWrite(COL, HIGH); //0 = "pin zero" on RasPi --> y-"data" pin
+			for (int i = 1; i<((ARRAY_HEIGHT+7)/8); i++){ //used for daisychaining row registers
+				digitalWrite(COL, HIGH); //push in y-data
 				yClock();
 				for (int z=0;z<8;z++) yClock();
 			}
 			digitalWrite(COL, HIGH);
 			yClock();
-				digitalWrite(COL, LOW);
+			digitalWrite(COL, LOW);
 		}
 		else yClock(); //shifts the data over to make sure the proper column is lit
 		outputToScreen();
-		// leaves the screen on for a while before the next line is lit = ~60fps
+		// leave the screen on for a while before the next line is lit; 1040uS = ~120fps 
     usleep(520); 
   }
 	return;
@@ -96,7 +95,7 @@ void *printScreenImplement(void *vptr_value) {
 	}
 }
 
-int main(bool (**matrix)){//matrixPtr points to a bool 2-d array. Points containing true interpreted on, false is off.
+int main(bool (**matrix)){//Boolean 2-d array. True = on, false = off.
 	pthread_t tid;
 	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix);
 	return tid;
