@@ -3,29 +3,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wiringPi.h>
+#define	COL 0
+#define ROW 1
+#define LATCH 2
+#define COLCLK 3
+#define ROWCLK 4
+#define ARRAY_HEIGHT  48 //change these to the matrix size
+#define ARRAY_WIDTH  64
 
-int xClock(void){
-	digitalWrite(3,HIGH); //3 = "pin three" on RasPi --> x-"clock" pin
-	digitalWrite(3,LOW);
-return;
+void yClock(void) {
+	digitalWrite(COLCLK, HIGH);
+	digitalWrite(COLCLK, LOW);
+	return;
 }
 
-int yClock(void){
-	digitalWrite(4,HIGH); //4 = "pin four" on RasPi --> y-"clock" pin
-	digitalWrite(4,LOW);
-return;
+void xClock(void) {
+	digitalWrite(ROWCLK, HIGH);
+	digitalWrite(ROWCLK, LOW);
+	return;
 }
 
-int outputToScreen(void){
-	digitalWrite(2,HIGH); //2 = "pin two" on RasPi --> "latch" pin set
-	digitalWrite(2,LOW);
+void outputToScreen(void) {
+	digitalWrite(LATCH, HIGH); 
+	digitalWrite(LATCH, LOW);
+	return;
 }
 
-int flushScreen(void){
+void flushScreen(void){
 	int y=0,x=0; //x=cols,y=rows
-	digitalWrite(0,LOW); //0 = "pin zero" on RasPi --> x-"data" pin
-	digitalWrite(1,LOW); //1 = "pin one" on Raspi --> y-"data" pin
-	for(x=0;x<=64;x++){
+	digitalWrite(ROW,LOW); //0 = "pin zero" on RasPi --> x-"data" pin
+	digitalWrite(COL,LOW); //1 = "pin one" on Raspi --> y-"data" pin
+	for(x=0;x<ARRAY_WIDTH;x++){ //assumes array is strictly wider or as wide as tall
 		xClock();
 		yClock();
 	}
@@ -33,8 +41,7 @@ int flushScreen(void){
 return;
 }
 
-
-int main(void){
+void main(void){
 wiringPiSetup();
 flushScreen();
 return;
