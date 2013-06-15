@@ -3,8 +3,8 @@
 #NEEDS TO BE RUN WITH SUDO PRIVELEDGES
 
 for i in {1..3}
-sudo rm pong /etc/init.d/
-sudo update-rc.d pong remove 
+sudo rm displayTest /etc/init.d/
+sudo update-rc.d displayTest remove 
 
 echo "Uninstalled."
 exit 1
