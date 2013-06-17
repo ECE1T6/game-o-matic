@@ -70,7 +70,8 @@ void printScreen(bool (**matrix)){
 			for (int i = 1; i<((ARRAY_HEIGHT+7)/8); i++){//used for daisychaining row registers
 				digitalWrite(COL, HIGH); //push in y-data
 				yClock();
-				for (int z=0;z<8;z++) yClock();
+				digitalWrite(COL, LOW);
+				for (int z=0;z<7;z++) yClock();
 			}
 			digitalWrite(COL, HIGH);
 			yClock();
