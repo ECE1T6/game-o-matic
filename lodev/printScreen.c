@@ -59,12 +59,14 @@ void flushRowRegisters(void) {
 
 //scans downward, across screen ONE FULL TIME.
 void printScreen(bool (**matrix)){	
-  for(int y = ARRAY_HEIGHT-1; y >= 0; y--) { 
-		for(int x = ARRAY_WIDTH-1;x >= 0; x--){
-			digitalWrite(ROW, (matrix[y][x])); //push in x-data
-			xClock();
+  	for(int y = 7; y >= 0; y--) {
+		for(int z = ARRAY_HEIGHT-8; z >= 0; z-=8){ 
+			for(int x = ARRAY_WIDTH-1;x >= 0; x--){
+				digitalWrite(ROW, (matrix[y+z][x])); //push in x-data
+				xClock();
+			}
 		}
-		if(y==0){ 
+		if(y==7){  
 			for (int i = 1; i<((ARRAY_HEIGHT+7)/8); i++){ //used for daisychaining row registers
 				digitalWrite(COL, HIGH); //push in y-data
 				yClock(); 
