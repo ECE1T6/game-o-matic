@@ -95,8 +95,7 @@ void *printScreenImplement(void *vptr_value) {
 	}
 }
 
-int main(bool (**matrix)){//Boolean 2-d array. True = on, false = off.
-	pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix);
-	return tid;
+int main(bool (**matrix), pthread_t *tid){//Boolean 2-d array (true=on), tid pointer
+	int ran = pthread_create(tid, NULL, printScreenImplement, (void *) matrix);
+	return ran; // if value is <0, pthread_create failed.
 }
