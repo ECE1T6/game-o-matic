@@ -118,10 +118,9 @@ void *printScreenImplement(void *vptr_value) {
 //matrix points to a bool 2-d array. 
 //Points containing true interpreted on, false is off.
 
-int MainScreen(bool (**matrix)){
-  pthread_t tid;
-	pthread_create(&tid, NULL, printScreenImplement, (void *) matrix);
-	return tid;
+int MainScreen(bool (**matrix), pthread_t *tid){
+	int run = pthread_create(tid, NULL, printScreenImplement, (void *) matrix);
+	return run;
 }
 
 //##### END OF printScreen LIBRARY ####
@@ -151,7 +150,8 @@ int main (void){
 	}
 	int x=0, y=0;
   /*initialization end*/
-	int tid = MainScreen(array);
+	pthread_t tid;
+ 	MainScreen(array, &tid);
 	while (1){
     cleanArray(x,y,array);
     if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
