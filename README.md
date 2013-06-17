@@ -7,21 +7,21 @@ RaspberryPi gaming glory: Software to run a 64x48 single-colour LED matrix/displ
 
 IN THE WORKS:
 
--void printScreen(bool** matrixPtr) -- prints the malloc'd array to the LED display
+-int printScreen(bool** matrixPtr, pthread_t *tid) -- prints the malloc'd array to the LED display
 
 -void flushScreen (void); -- blanks the screen for shutdown / game end / exit
 
 -void WriteBoard(int col, int row, char* str, size); -- writes string/text and scales to req. size in the matrix for output
 
--void pong(bool** array); -- The pong game
+-void pong(bool** array, struct ctlData *ctl); -- The pong game
 
--void snake(bool** array); -- The snake game
+-void snake(bool** array, struct ctlData *ctl); -- The snake game
 
--void gameOMatic(); -- wrapper program; calls the required init functions and acts as a menu for games + displaying tweets.
+-void gameOMatic(void); -- wrapper program; calls the required init functions and acts as a menu for games + displaying tweets.
 
 
 In addition, we need to write interface functions to sample the input from the joystick and provide this information to the high-level programmers conveniently.
 
 eg.,
 
--void controller(int *vert, int *hor, int *buttonHit); -- passes the current position/value of the USB/GPIO controller to the game
+-int controller(struct ctlData *ctl, pthread_t *tid); -- passes the current position/value of the USB/GPIO controller to the game
