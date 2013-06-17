@@ -12,7 +12,7 @@
 
 void main(void){
 
-//### BEGINNING OF INITIALIZATION
+//### BEGINNING OF INITIALIZATION ####
 //system call to start the twitter getting program
 	system("java getTweets -Xms10M -Xmx40M -jar /home/pi/getTweets.jar file=TWEET_FILE"); 
 
@@ -28,10 +28,15 @@ void main(void){
 			}
 		}
 
-//spawn thread for running the display
-	pthread_t screenTid = printScreen(screen);
+//Declare tids
+	pthread_t *screenTid, *ctlTid, *chkTid;
 
-//malloc controller data struct
+//spawn thread for running the display
+	int screenRun = -1;
+	for (int i = 0; i < 3 && screenRun < 0; i++)
+		screenRun = printScreen(screen, screenTid); //return value of <0 means failure
+
+//define and malloc controller data struct
 	struct ctlData {
 		int vert1;
 		int hor1;
@@ -45,18 +50,21 @@ void main(void){
 	ctl = (struct *ctlData) malloc(sizeof(struct ctlData));
 
 //spawn thread for getting controller data
-
-	pthread_t ctlTid = controller(ctl);
-
+	int ctlRun = -1;
+	for (int i = 0; i < 3 && ctlRun < 0; i++)
+		ctlRun = controller(ctl, ctlTid); //return value of <0 means failure
+	
 //spawn thread to check 'reset' button
 	bool *reset;
 	reset = (bool*) malloc(sizeof(bool*));
 	*reset = false;
-	pthread_t chkTid = restChkr(reset);
+	int chkRun = -1;
+	for (int i = 0; i < 3 && chkRun < 0; i++)
+		chkRun = restChkr(reset, chkTid); //return value of <0 means failure
 
 //### END INITIALIZATION ###
 
-while(reset == false){
+while(*reset == false){
 //display menu for games selection and tweets
 		while(ctl.buttonHit1 != true && ctl.buttonHit2 != true){
 			//display dem tweets and dem menus
