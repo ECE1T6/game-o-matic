@@ -29,7 +29,7 @@ void main(void){
 		}
 
 //Declare tids
-	pthread_t *screenTid, *ctlTid, *chkTid;
+	pthread_t *screenTid, *ctlTid;
 
 //spawn thread for running the display
 	int screenRun = -1;
@@ -38,12 +38,12 @@ void main(void){
 
 //define and malloc controller data struct
 	struct ctlData {
-		int vert1;
-		int hor1;
-		int vert2;
-		int hor2;
-		bool buttonHit1;
-		bool buttonHit2;
+		int joy1;
+		int joy2;
+		bool button1;
+		bool button2;
+		bool button3;
+		bool button4;
 	};
 
 	struct ctlData *ctl;
@@ -54,19 +54,11 @@ void main(void){
 	for (int i = 0; i < 3 && ctlRun < 0; i++)
 		ctlRun = controller(ctl, ctlTid); //return value of <0 means failure
 	
-//spawn thread to check 'reset' button
-	bool *reset;
-	reset = (bool*) malloc(sizeof(bool*));
-	*reset = false;
-	int chkRun = -1;
-	for (int i = 0; i < 3 && chkRun < 0; i++)
-		chkRun = restChkr(reset, chkTid); //return value of <0 means failure
-
 //### END INITIALIZATION ###
 
 while(*reset == false){
 //display menu for games selection and tweets
-		while(ctl.buttonHit1 != true && ctl.buttonHit2 != true){
+		while(ctl.button1 != true && ctl.button2 != true){
 			//display dem tweets and dem menus
 		}
 //when a selection is made: (BEWARE! pseudo-code galore!)
@@ -83,7 +75,6 @@ while(*reset == false){
 	//unmalloc all the things that were malloc'd!
 	//exit or kill all threads
 	pthread_join(ctlTid, NULL);
-	pthread_join(chkTid, NULL);
 	pthread_join(screenTid, NULL);
 	system("sudo restart"); // or simply just restart the program?
 return;

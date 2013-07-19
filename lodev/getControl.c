@@ -8,30 +8,107 @@
 #include <pthread.h>
 
 //#### PIN and CONST. DECLARATIONS ####
+//player 1
+#define JOY1_UP 5
+#define	JOY1_RIGHT 6
+#define JOY1_DOWN 7
+#define JOY1_LEFT 8
+#define BUTTON1 13
+#define BUTTON2 14
+
+//player 2
+#define JOY2_UP 9
+#define	JOY2_RIGHT 10
+#define JOY2_DOWN 11
+#define JOY2_LEFT 12
+#define BUTTON3 15
+#define BUTTON4 16
+
 
 struct ctlData {
-		int vert1;
-		int hor1;
-		int vert2;
-		int hor2;
-		bool buttonHit1;
-		bool buttonHit2;
+		int joy1;
+		int joy2;
+		bool button1;
+		bool button2;
+		bool button3;
+		bool button4;
 	};
 
 void getControl(struct ctlData *ctl){
- //code for grabbing positions from USB ports
+ //code for grabbing positions from GPIO ports
+
+	//Joystick 1
+	if (digitalRead(JOY1_UP)){
+		if (digitalRead(JOY1_LEFT)) 
+			ctl->joy1 = 8;
+		else if (digitalRead(JOY1_RIGHT))
+			ctl->joy1 = 2;
+		else 
+			ctl->joy1 = 1;
+	}
+	else if (digitalRead(JOY1_RIGHT)){
+		if (digitalRead(JOY1_DOWN)) 
+			ctl->joy1 = 4;
+		else
+			ctl->joy1 = 3;
+	}
+	else if (digitalRead(JOY1_DOWN)){
+		if (digitalRead(JOY1_LEFT)) 
+			ctl->joy1 = 6;
+		else
+			ctl->joy1 = 5;
+	}
+	else if (digitalRead(JOY1_LEFT)){ 
+			ctl->joy1 = 7;
+	}
+
+	//Joystick 2
+	if (digitalRead(JOY2_UP)){
+		if (digitalRead(JOY2_LEFT)) 
+			ctl->joy2 = 8;
+		else if (digitalRead(JOY2_RIGHT))
+			ctl->joy2 = 2;
+		else 
+			ctl->joy2 = 1;
+	}
+	else if (digitalRead(JOY2_RIGHT)){
+		if (digitalRead(JOY2_DOWN)) 
+			ctl->joy2 = 4;
+		else
+			ctl->joy2 = 3;
+	}
+	else if (digitalRead(JOY2_DOWN)){
+		if (digitalRead(JOY2_LEFT)) 
+			ctl->joy2 = 6;
+		else
+			ctl->joy2 = 5;
+	}
+	else if (digitalRead(JOY2_LEFT)){ 
+			ctl->joy2 = 7;
+	}
+
+	//Buttons
+	if (digitalRead(BOTTON1))
+		ctl->button1 = true;
+	if (digitalRead(BOTTON2))
+		ctl->button2 = true;
+	if (digitalRead(BOTTON3))
+		ctl->button3 = true;
+	if (digitalRead(BOTTON4))
+		ctl->button4 = true;
+
 	return;
 }
 
 void *controllerImplement(void *vptr_value) {
-	//wiringPiSetup();
-	//for (int i = 0; i<=4; i++){
-	//pinMode(i, OUTPUT);
-	//}
+	wiringPiSetup();
+	for (int i = 5; i<=16; i++){
+	pinMode(i, INPUT);
+	}
 	struct ctlData *ctl = (struct ctlData*) vptr_value;
 	while(1) {
 		getControl(ctl);
-		usleep(250); //sleep a bit before next poll
+		usleep(2000); //sleep a bit before next poll -- 2000 = 500Hz
 	}
 }
 
