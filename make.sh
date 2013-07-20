@@ -16,6 +16,7 @@ gcc -o flushScreen flushScreen.c -lwiringPi
 echo "flushScreen Compiled."
 gcc -o printScreen printScreen.c -lwiringPi -std=gnu99
 echo "printScreen Compiled."
+gcc -o getControl getControl.c -lwiringPi -std=gnu99
 echo "...Finished."
 exit 1
 

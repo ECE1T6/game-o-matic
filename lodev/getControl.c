@@ -1,4 +1,4 @@
-//printScreen.c -- prints/mux's all required pixels on an LED screen. Scans in rows from top to bottom.
+//getControl.c -- spawns a thread and checks current state of game controllers.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,13 +88,13 @@ void getControl(struct ctlData *ctl){
 	}
 
 	//Buttons
-	if (digitalRead(BOTTON1))
+	if (digitalRead(BUTTON1))
 		ctl->button1 = true;
-	if (digitalRead(BOTTON2))
+	if (digitalRead(BUTTON2))
 		ctl->button2 = true;
-	if (digitalRead(BOTTON3))
+	if (digitalRead(BUTTON3))
 		ctl->button3 = true;
-	if (digitalRead(BOTTON4))
+	if (digitalRead(BUTTON4))
 		ctl->button4 = true;
 
 	return;
