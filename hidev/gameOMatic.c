@@ -6,15 +6,13 @@
 
 //###### GLOBAL DEFINITIONS ####
 #define _GNU_SOURCE
-#define ARRAY_HEIGHT  48 //change these to the matrix size
-#define ARRAY_WIDTH  64
-#define TWEET_FILE /home/pi/tweets.txt //change this to the file where tweets are being stored
+#define ARRAY_HEIGHT  38 //change these to the matrix size
+#define ARRAY_WIDTH  76
 
 void main(void){
 
 //### BEGINNING OF INITIALIZATION ####
 //system call to start the twitter getting program
-	system("java getTweets -Xms10M -Xmx40M -jar /home/pi/getTweets.jar file=TWEET_FILE"); 
 
 //malloc the display array
 	bool **screen;

@@ -98,7 +98,7 @@ void getControl(struct ctlData *ctl){
 		ctl->button3 = true;
 	if (digitalRead(BUTTON4))
 		ctl->button4 = true;
-	if (figitalRead(RESET))
+	if (digitalRead(RESET))
 		ctl->reset = true;
 	
 	return;
