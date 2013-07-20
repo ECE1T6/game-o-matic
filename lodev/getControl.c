@@ -106,7 +106,7 @@ void getControl(struct ctlData *ctl){
 
 void *controllerImplement(void *vptr_value) {
 	wiringPiSetup();
-	for (int i = 5; i<=16; i++){
+	for (int i = 5; i<=20; i++){
 	pinMode(i, INPUT);
 	}
 	struct ctlData *ctl = (struct ctlData*) vptr_value;
