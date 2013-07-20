@@ -8,21 +8,22 @@
 #include <pthread.h>
 
 //#### PIN and CONST. DECLARATIONS ####
+#define RESET 8
 //player 1
 #define JOY1_UP 5
 #define	JOY1_RIGHT 6
 #define JOY1_DOWN 7
-#define JOY1_LEFT 8
-#define BUTTON1 13
-#define BUTTON2 14
+#define JOY1_LEFT 10 
+#define BUTTON1 17
+#define BUTTON2 18
 
 //player 2
-#define JOY2_UP 9
-#define	JOY2_RIGHT 10
-#define JOY2_DOWN 11
-#define JOY2_LEFT 12
-#define BUTTON3 15
-#define BUTTON4 16
+#define JOY2_UP 11
+#define	JOY2_RIGHT 12
+#define JOY2_DOWN 13
+#define JOY2_LEFT 14
+#define BUTTON3 19
+#define BUTTON4 20
 
 
 struct ctlData {
@@ -32,6 +33,7 @@ struct ctlData {
 		bool button2;
 		bool button3;
 		bool button4;
+		bool reset;
 	};
 
 void getControl(struct ctlData *ctl){
@@ -96,7 +98,9 @@ void getControl(struct ctlData *ctl){
 		ctl->button3 = true;
 	if (digitalRead(BUTTON4))
 		ctl->button4 = true;
-
+	if (figitalRead(RESET))
+		ctl->reset = true;
+	
 	return;
 }
 

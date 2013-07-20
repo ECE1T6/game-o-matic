@@ -44,6 +44,7 @@ void main(void){
 		bool button2;
 		bool button3;
 		bool button4;
+		bool reset;
 	};
 
 	struct ctlData *ctl;
