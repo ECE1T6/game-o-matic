@@ -5,6 +5,8 @@ RaspberryPi gaming glory: Software to run a 64x48 single-colour LED matrix/displ
 - High-level programming: will include games (starting with Pong!) and whatever else we want.
 - Low-level programming: writing a library that will provide the key functions + hardware interface
 
+A lodev libraries spec. sheet: https://docs.google.com/document/d/19enZnzPExQ6_HpwOZU4J00wAjfWi3ineDXp8A0TtiM0/edit
+
 IN THE WORKS:
 
 void lightOn (int col, int row);
