@@ -9,11 +9,11 @@
 #define ARRAY_WIDTH  64
 
 //#### PIN DECLARATIONS ####
-#define	COL 0
-#define ROW 1
+#define ROW 0
+#define	COL 1 
 #define LATCH 2
-#define COLCLK 3
-#define ROWCLK 4
+#define ROWCLK 3
+#define COLCLK 4
 
 //#### BEGINNING OF printScreen LIBRARY ####
 //Scans in rows from top-to-bottom.
@@ -142,28 +142,32 @@ int main (void){
   /*initialization start*/
 	wiringPiSetup();	//
 	bool **array;
+	int x=0, y=0;
 	array = (bool**) malloc(ARRAY_HEIGHT*sizeof(bool*));
-	for  (int i=0; i<ARRAY_HEIGHT; i++){
+	for (int i = 0; i < ARRAY_HEIGHT; i++){
 		array[i] = (bool*) malloc (ARRAY_WIDTH*sizeof(bool));
-	}
-	for (int i=0; i<ARRAY_HEIGHT; i++){
-		for (int j=0; j<ARRAY_WIDTH; j++){
+		for (int j = 0; j < ARRAY_WIDTH; j++){
 			array[i][j] = false;
 		}
 	}
-	int x=0, y=0;
   /*initialization end*/
 	pthread_t tid;
  	MainScreen(array, &tid);
 	while (1){
-    cleanArray(x,y,array);
-    if (y==ARRAY_HEIGHT-1 && x==ARRAY_WIDTH-1){x=0;y=0;}
-    else if (y == ARRAY_HEIGHT-1 && x < ARRAY_WIDTH-1){y=0;x++;}
-    else if (y<ARRAY_HEIGHT-1) y++;
-    updateArray(x,y,array);
-   // print_test(array);
+    cleanArray(x, y, array);
+    if (y == (ARRAY_HEIGHT - 1) && x == (ARRAY_WIDTH - 1)) {
+      x = 0;
+      y = 0;
+    } else if (y == (ARRAY_HEIGHT - 1) && x < (ARRAY_WIDTH - 1)) {
+      y = 0;
+      x++;
+    } else if (y < (ARRAY_HEIGHT - 1)) {
+      y++;
+    }
+    updateArray(x, y, array);
+    // print_test(array);
     usleep(35000);
-   // system("clear");		
-}
+    // system("clear");		
+  }
 	return 0;
 }
