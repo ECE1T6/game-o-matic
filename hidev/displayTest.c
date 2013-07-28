@@ -4,170 +4,229 @@
 #include <unistd.h>
 #include <wiringPi.h>
 #include <pthread.h>
+#include <time.h>
 
-#define ARRAY_HEIGHT  48 //change these to the matrix size
-#define ARRAY_WIDTH  64
+/*
+  Screen size spec
+*/
+#define DISPLAY_WIDTH  38 
+#define DISPLAY_LENGTH  76
+#define UNIT_WIDTH 8
+#define UNIT_LENGTH 76
 
-//#### PIN DECLARATIONS ####
-#define ROW 0
-#define	COL 1 
+/*
+  Pinout map on Raspberry Pi
+*/
+#define COL 0
+#define ROW 1
 #define LATCH 2
-#define ROWCLK 3
-#define COLCLK 4
+#define COLCLK 3
+#define ROWCLK 4
 
-//#### BEGINNING OF printScreen LIBRARY ####
-//Scans in rows from top-to-bottom.
+/*
+  Screen wrapper for arguments passed to asynchronous thread functions.
+*/
+typedef struct {
+  bool **screen;
+} ScreenData;
 
-void yClock(void) {
-	digitalWrite(COLCLK, HIGH);
-	digitalWrite(COLCLK, LOW);
-	return;
+/*
+  Clock in data to the column SN74 registers.
+  100ns delay should be safe; minimum delays can be found on datasheets.
+*/
+void colclk(void) {
+  digitalWrite(COLCLK, HIGH);
+  nanosleep(100); 
+  digitalWrite(COLCLK, LOW);
+  return;
 }
 
-void xClock(void) {
-	digitalWrite(ROWCLK, HIGH);
-	digitalWrite(ROWCLK, LOW);
-	return;
+/*
+  Clock in data to the row TPIC registers
+*/
+void rowclk(void) {
+  digitalWrite(ROWCLK, HIGH);
+  nanosleep(100);
+  digitalWrite(ROWCLK, LOW);
+  return;
 }
 
-void outputToScreen(void) {
-	digitalWrite(LATCH, HIGH); 
-	digitalWrite(LATCH, LOW);
-	return;
+/*
+  Latches both row and column registers.
+*/
+void latch(void) {
+  digitalWrite(LATCH, HIGH); 
+  nanosleep(100);
+  digitalWrite(LATCH, LOW);
+  return;
 }
 
-//clears all data from shift registers (but doesn't show this on screen)
-void flushAllRegisters(void) { 	
-  int y = 0, x = 0; //x=#cols,y=#rows
-	digitalWrite(COL, LOW); 
-	digitalWrite(ROW, LOW);
-  //assuming array is strictly as wide or wider than tall
-	for(x = 0; x <= ARRAY_WIDTH; x++) { 
-		yClock();
-		xClock();
-	}
-	return;
+/*
+  Setters for serial data in of row and column registers.
+*/
+void rowInHigh(void) {
+  digitalWrite(ROW, HIGH);
+  return;
 }
 
-//clears all data from shift registers (but doesn't show this on screen)
-void flushRowRegisters(void) { 
-	int x = 0; //x=#cols,y=#rows
-	digitalWrite(ROW, LOW); //push in x-data
-	for(x = 0; x <= ARRAY_WIDTH; x++){
-		xClock();
-	}
-	return;
+void rowInLow(void) {
+  digitalWrite(ROW, LOW);
+  return;
 }
 
-//scans downward, across screen ONE FULL TIME.
-void printScreen(bool (**matrix)){	
-	for(int y = 7; y >= 0; y--) {
-		for(int z = ARRAY_HEIGHT-8; z >= 0; z-=8){ 
-			for(int x = ARRAY_WIDTH-1;x >= 0; x--){
-				digitalWrite(ROW, (matrix[y+z][x])); //push in x-data
-				xClock();
-			}
-		}
-		if(y==7){ 
-			for (int i = 1; i<((ARRAY_HEIGHT+7)/8); i++){//used for daisychaining row registers
-				digitalWrite(COL, HIGH); //push in y-data
-				yClock();
-				digitalWrite(COL, LOW);
-				for (int z=0;z<7;z++) yClock();
-			}
-			digitalWrite(COL, HIGH);
-			yClock();
-			digitalWrite(COL, LOW);
-		}
-		else yClock(); //shifts the data over to make sure the proper column is lit
-		outputToScreen();
-		// leave the screen on for a while before the next line is lit; 1040uS = ~120fps 
-    usleep(520); 
+void colInHigh(void) {
+  digitalWrite(COL, HIGH);
+  return;
+}
+
+void colInLow (void) {
+  digitalWrite(COL, LOW);
+  return;
+}
+
+/*
+  Clears the data of both column and row registers to 0 (low).
+*/
+void flush(void) {
+  rowInLow();
+  colInLow();
+
+  for (int x = 0; x < UNIT_LENGTH; x++) {
+    rowclk();
   }
-	return;
+
+  for (int y = 0; y < UNIT_WIDTH; y++) {
+    colclk();
+  }
+  return;
 }
 
-void print_test(bool (**array)){
-    int i, j;
-    for(i = 0; i < ARRAY_HEIGHT; i++){
-        for(j = 0; j < ARRAY_WIDTH; j++){
-            if(array[i][j] == true){
-                printf(" #", array[i][j]);
-            }
-            else{
-                printf("  ", array[i][j]);
-            }
-        }
-        printf("\n");
+/*
+  Sets the data of the column data pins to low, with the exception of
+  the leading data pin, which is set to high.
+*/
+void resetCols(void) {
+  int col
+  colInLow();
+  for (int col = UNIT_WIDTH -1; col > 0; col--) {
+    colclk();
+  }
+  colInHigh();
+  colclk();
+  colInLow();
+
+  return;
+}
+
+/*
+  Updates the screen with latest data. 
+*/
+void refresh(bool **screen) { 
+  int col, row;
+  resetCols();
+  for (col = UNIT_WIDTH - 1; col >= 0; col--) { 
+    for (row = UNIT_LENGTH - 1; row >= 0; row--) {
+      if (screen[col][row] == true) {
+        rowInHigh();
+      } else {
+        rowInLow();
+      }
+      rowclk();
     }
- return;
+    
+    latch();
+    colclk(); //shifts the data over to make sure the proper column is lit
+    usleep(100);  //delay
+  }
+  return;
 }
 
-//matrix points to a bool 8x8 2-d array.
-void *printScreenImplement(void *vptr_value) {
-	wiringPiSetup();
-	for (int i = 0; i<=4; i++){
-	pinMode(i, OUTPUT);
-	}
-	bool (**matrix) = (bool (**)) vptr_value;
-	flushAllRegisters(); 
-	while(1) {
-		//print_test(matrix);
-		printScreen(matrix);
-		//system("clear");
-	}
+/*
+  Thread function calls refresh indefinitely.
+*/
+void *render(void *args) {
+  ScreenData *args = (ScreenData*) args;
+  bool **screen = args -> screen;
+  while (1) {
+    refresh(screen);
+  }
+
+  return NULL;
 }
 
-//matrix points to a bool 2-d array. 
-//Points containing true interpreted on, false is off.
-
-int MainScreen(bool (**matrix), pthread_t *tid){
-	int run = pthread_create(tid, NULL, printScreenImplement, (void *) matrix);
-	return run;
+/*
+  Initialize all I/O pins.
+*/
+void initializePins(void) {
+  pinMode(ROW, OUTPUT);
+  pinMode(COL, OUTPUT);
+  pinMode(LATCH, OUTPUT);
+  pinMode(ROWCLK, OUTPUT);
+  pinMode(COLCLK, OUTPUT);
+  
+  return;
 }
 
-//##### END OF printScreen LIBRARY ####
+/*
+  Initialize all threads and call them here.
+*/
+void init(bool **screen) {  
+  pthread_t render_tid;
+  ScreenData *tdata = (ScreenData*) malloc(sizeof(ScreenData));
+  tdata -> screen = screen;
+  pthread_create(&render_tid, NULL, render, tdata);
+  pthread_join(render_tid);
 
-void cleanArray(int y, int x, bool (**array)){
-	array[y][x] = false;
-	return;
+  return;
 }
 
-void updateArray(int y, int x, bool (**array)){
-	array[y][x] = true;
-	return;
+/*
+  Turn on/off pixel on screen with its location specified by the 
+  col and row paramters.
+*/
+void off(int col, int row, bool **screen) {
+  screen[col][row] = false;
+  return;
 }
 
-int main (void){
-  /*initialization start*/
-	wiringPiSetup();	//
-	bool **array;
-	int x=0, y=0;
-	array = (bool**) malloc(ARRAY_HEIGHT*sizeof(bool*));
-	for (int i = 0; i < ARRAY_HEIGHT; i++){
-		array[i] = (bool*) malloc (ARRAY_WIDTH*sizeof(bool));
-		for (int j = 0; j < ARRAY_WIDTH; j++){
-			array[i][j] = false;
-		}
-	}
+void on(int col, int row, bool **screen) {
+  screen[col][row] = true;
+  return;
+}
+
+/*
+  Print screen data on console for debugging purposes.
+*/
+void printTest(bool **screen) {
+  int col, row, pixel;
+  for (col = 0; col < UNIT_WIDTH; col++) {
+    for (row = 0; row < UNIT_LENGTH; row++) {
+      pixel = screen[col][row];
+      if (pixel == true){
+        printf(" #");
+      } else {
+        printf("  ");
+      }
+    }
+    printf("\n");
+  }
+  return;
+}
+
+int main(void) {
+  wiringPiSetup();
+  initializePins();
+  bool **screen;
+  int col, row;
+  screen = (bool**) malloc(UNIT_WIDTH * sizeof(bool*));
+  for (col = 0; col < UNIT_WIDTH; col++) {
+    screen[col] = (bool*) malloc(UNIT_LENGTH * sizeof(bool));
+    for (row = 0; row < UNIT_LENGTH; row++) {
+      screen[col][row] = false;
+    }
+  }
   /*initialization end*/
-	pthread_t tid;
- 	MainScreen(array, &tid);
-	while (1){
-    cleanArray(x, y, array);
-    if (y == (ARRAY_HEIGHT - 1) && x == (ARRAY_WIDTH - 1)) {
-      x = 0;
-      y = 0;
-    } else if (y == (ARRAY_HEIGHT - 1) && x < (ARRAY_WIDTH - 1)) {
-      y = 0;
-      x++;
-    } else if (y < (ARRAY_HEIGHT - 1)) {
-      y++;
-    }
-    updateArray(x, y, array);
-    // print_test(array);
-    usleep(35000);
-    // system("clear");		
-  }
-	return 0;
+  init(screen);
+  free(screen);
+  return 0;
 }
