@@ -31,7 +31,7 @@ typedef struct {
 } ScreenData;
 
 /*
-  Clock in data to the column SN74 registers.
+  Clock in data to the column TPIC registers.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
 void colclk(void) {
@@ -42,7 +42,7 @@ void colclk(void) {
 }
 
 /*
-  Clock in data to the row TPIC registers
+  Clock in data to the row SN74 registers
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
@@ -92,11 +92,11 @@ void flush(void) {
   rowInLow();
   colInLow();
 
-  for (row = 0; row < UNIT_LENGTH; row++) {
+  for (row = 0; row < UNIT_WIDTH; row++) {
     rowclk();
   }
 
-  for (col = 0; col < UNIT_WIDTH; col++) {
+  for (col = 0; col < UNIT_LENGTH; col++) {
     colclk();
   }
   
@@ -107,15 +107,15 @@ void flush(void) {
   Sets the data of the column data pins to low, with the exception of
   the leading data pin, which is set to high.
 */
-void resetCols(void) {
-  int col
-  colInLow();
-  for (int col = UNIT_WIDTH -1; col > 0; col--) {
-    colclk();
+void resetRows(void) {
+  int row;
+  rowInLow();
+  for (int row = UNIT_WIDTH -1; row > 0; row--) {
+    rowclk();
   }
-  colInHigh();
-  colclk();
-  colInLow();
+  rowInHigh();
+  rowclk();
+  rowInLow();
 
   return;
 }
@@ -126,18 +126,18 @@ void resetCols(void) {
 void refresh(bool **screen) { 
   int col, row;
   resetCols();
-  for (col = UNIT_WIDTH - 1; col >= 0; col--) { 
-    for (row = UNIT_LENGTH - 1; row >= 0; row--) {
-      if (screen[col][row] == true) {
-        rowInHigh();
+  for (row = UNIT_WIDTH - 1; row >= 0; row--) { 
+    for (col = UNIT_LENGTH - 1; col >= 0; col--) {
+      if (screen[row][col] == true) {
+        colInHigh();
       } else {
-        rowInLow();
+        colInLow();
       }
-      rowclk();
+      colclk();
     }
     
     latch();
-    colclk(); //shifts the data over to make sure the proper column is lit
+    rowclk(); //shifts the data over to make sure the proper column is lit
     usleep(100);  //delay
   }
   return;
@@ -186,13 +186,13 @@ void init(bool **screen) {
   Turn on/off pixel on screen with its location specified by the 
   col and row paramters.
 */
-void off(int col, int row, bool **screen) {
-  screen[col][row] = false;
+void off(int row, int col, bool **screen) {
+  screen[row][col] = false;
   return;
 }
 
-void on(int col, int row, bool **screen) {
-  screen[col][row] = true;
+void on(int row, int col, bool **screen) {
+  screen[row][col] = true;
   return;
 }
 
@@ -201,9 +201,9 @@ void on(int col, int row, bool **screen) {
 */
 void printTest(bool **screen) {
   int col, row, pixel;
-  for (col = 0; col < UNIT_WIDTH; col++) {
-    for (row = 0; row < UNIT_LENGTH; row++) {
-      pixel = screen[col][row];
+  for (row = 0; row < UNIT_WIDTH; row++) {
+    for (col = 0; col < UNIT_LENGTH; col++) {
+      pixel = screen[row][col];
       if (pixel == true){
         printf(" #");
       } else {
@@ -221,13 +221,13 @@ int main(void) {
   bool **screen;
   int col, row;
   screen = (bool**) malloc(UNIT_WIDTH * sizeof(bool*));
-  for (col = 0; col < UNIT_WIDTH; col++) {
-    screen[col] = (bool*) malloc(UNIT_LENGTH * sizeof(bool));
-    for (row = 0; row < UNIT_LENGTH; row++) {
-      screen[col][row] = false;
+  for (row = 0; row < UNIT_WIDTH; row++) {
+    screen[row] = (bool*) malloc(UNIT_LENGTH * sizeof(bool));
+    for (col = 0; col < UNIT_LENGTH; col++) {
+      screen[row][col] = false;
     }
   }
-  /*initialization end*/
+  
   init(screen);
   free(screen);
   return 0;
