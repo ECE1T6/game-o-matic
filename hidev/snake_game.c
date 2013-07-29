@@ -146,13 +146,13 @@ void placeFood(int *foodX, int *foodY, struct segment *first, int HEIGHT, int WI
   ledArray[*foodY][*foodX] = true;
   return;
 }
-int moveHeadCoords(int moveDir, float *headX, float *headY, float moveDistance) {
+int moveHeadCoords(int moveDir, int visibleMoveDir, float *headX, float *headY, float moveDistance) {
   int previousMoveDir = moveDir;
   moveDir = getLeftInput(); /*Accepting integer test input.*/
   if (moveDir != 1 && moveDir != 3 && moveDir != 5 && moveDir != 7) { /*Enforcing cardinal directions*/
     moveDir = previousMoveDir;
   }
-  else if(moveDir - previousMoveDir == 4 || previousMoveDir - moveDir == 4) { /*Reversing direction disallowed*/
+  else if(moveDir - visibleMoveDir == 4 || visibleMoveDir - moveDir == 4) { /*Moving into previous segments is disallowed*/
     moveDir = previousMoveDir;
   }
   if (moveDir == 1) {
@@ -233,11 +233,12 @@ void snake(bool** ledArray) {
   srand(time(NULL));
 
   /*Snake-specific variables:*/
-  float moveDistance = 0.5; /*Adjustable for difficulty. Must be <= 1.*/
+  float moveDistance = 0.3; /*Adjustable for difficulty. Must be <= 1.*/
   struct segment *first = initializeList(INITIAL_X, INITIAL_Y, INITIAL_SIZE, ledArray);
   float headX = first->x;
   float headY = first->y;
   int moveDir = 3; /*no move == 0, up == 1, right == 3, down == 5, left == 7*/
+  int visibleMoveDir = 3;
   int foodX;
   int foodY;
   placeFood(&foodX, &foodY, first, BOTTOM_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
@@ -245,7 +246,7 @@ void snake(bool** ledArray) {
 
   while(1) {
     testFrame(ledArray);
-    moveDir = moveHeadCoords(moveDir, &headX, &headY, moveDistance);
+    moveDir = moveHeadCoords(moveDir, visibleMoveDir, &headX, &headY, moveDistance);
     if(checkOutBounds(headX + 0.5, headY + 0.5)) {
       break;
     }
@@ -256,10 +257,9 @@ void snake(bool** ledArray) {
     }
     else if((int) (headX + 0.5) != first->x || (int) (headY + 0.5) != first->y) {
       shiftList(first, headX + 0.5, headY + 0.5, ledArray);
+      visibleMoveDir = moveDir;
     }
     if(checkCollision(first->x, first->y, first->next)) {
-      printf("%d", moveDir);
-      system("pause");
       break;
     }
   }
