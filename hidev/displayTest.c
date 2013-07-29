@@ -88,16 +88,18 @@ void colInLow (void) {
   Clears the data of both column and row registers to 0 (low).
 */
 void flush(void) {
+  int row, col;
   rowInLow();
   colInLow();
 
-  for (int x = 0; x < UNIT_LENGTH; x++) {
+  for (row = 0; row < UNIT_LENGTH; row++) {
     rowclk();
   }
 
-  for (int y = 0; y < UNIT_WIDTH; y++) {
+  for (col = 0; col < UNIT_WIDTH; col++) {
     colclk();
   }
+  
   return;
 }
 
