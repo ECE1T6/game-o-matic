@@ -31,7 +31,8 @@ typedef struct {
 } ScreenData;
 
 /*
-  Clock in data to the column TPIC registers.
+  Clock in data to the column (sinking) registers.
+  This is the TPIC6B595N.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
 void colclk(void) {
@@ -42,7 +43,8 @@ void colclk(void) {
 }
 
 /*
-  Clock in data to the row SN74 registers
+  Clock in data to the row (sourcing) registers
+  This is the TPIC6B595N in combination with a transistor to source current.
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
@@ -109,12 +111,17 @@ void flush(void) {
 */
 void resetRows(void) {
   int row;
+  //Set each of the rows to low except row 0.
   rowInLow();
-  for (int row = UNIT_WIDTH -1; row > 0; row--) {
+  for (int row = UNIT_WIDTH - 1; row > 0; row--) {
     rowclk();
   }
+  
+  //Finally, set the first row to high.
   rowInHigh();
   rowclk();
+  
+  //Reset serial in to low (as it should be by default).
   rowInLow();
 
   return;
@@ -137,9 +144,12 @@ void refresh(bool **screen) {
     }
     
     latch();
-    rowclk(); //shifts the data over to make sure the proper column is lit
-    usleep(100);  //delay
+    //shift to next row the next time the loop executes.
+    rowclk();
+    //muxing delay (100 us)
+    usleep(100);
   }
+  
   return;
 }
 
@@ -177,6 +187,7 @@ void init(bool **screen) {
   ScreenData *tdata = (ScreenData*) malloc(sizeof(ScreenData));
   tdata -> screen = screen;
   pthread_create(&render_tid, NULL, render, tdata);
+  //halt execution until called thread terminates.
   pthread_join(render_tid);
 
   return;
