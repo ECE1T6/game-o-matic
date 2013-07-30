@@ -32,7 +32,7 @@ typedef struct {
 
 /*
   Clock in data to the column (sinking) registers.
-  This is the TPIC6B595N.
+  Hardware: TPIC6B595N acting as sink.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
 void colclk(void) {
@@ -44,7 +44,7 @@ void colclk(void) {
 
 /*
   Clock in data to the row (sourcing) registers
-  This is the TPIC6B595N in combination with a transistor to source current.
+  Hardware: TPIC6B595N in combination with transistors to source current.
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
@@ -64,7 +64,7 @@ void latch(void) {
 }
 
 /*
-  Setters for serial data in of row and column registers.
+  Serial data in setters for row and column registers.
 */
 void rowInHigh(void) {
   digitalWrite(ROW, HIGH);
@@ -106,12 +106,12 @@ void flush(void) {
 }
 
 /*
-  Sets the data of the column data pins to low, with the exception of
+  Sets the column data pins to low, with the exception of
   the leading data pin, which is set to high.
 */
 void resetRows(void) {
   int row;
-  //Set each of the rows to low except row 0.
+  //Set each of the rows to low except the first row.
   rowInLow();
   for (int row = UNIT_WIDTH - 1; row > 0; row--) {
     rowclk();
