@@ -83,7 +83,7 @@ float TOP_MARGIN; /*The margins bound the area controlled by the game.*/
 float BOT_MARGIN;
 float LEFT_MARGIN;
 float RIGHT_MARGIN;
-float BOT_END; /*= ARRAY_HEIGHT - BOTTOM_MARGIN - 1.0*/
+float BOT_END; /*= ARRAY_HEIGHT - BOT_MARGIN - 1.0*/
 float RIGHT_END; /*= ARRAY_WIDTH - RIGHT_MARGIN - 1.0*/
 
 /*Functions usable by all games:*/
@@ -231,21 +231,34 @@ void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH) 
     pieceOrien = 1; /*Rotation for "O" is purposely broken for efficiency and conformation.*/
   }
   if(curType != 0) {
-    fill2DArray(curPiece, PIECE_WIDTH, PIECE_WIDTH, false);
-    PIECE_WIDTH -= (PIECE_WIDTH / 4); /*Moves the pivot for rotation.*/
+    drawRectangle(curPiece, false, 0, PIECE_WIDTH * 0.75, PIECE_WIDTH, PIECE_WIDTH / 4);
+    drawRectangle(curPiece, false, PIECE_WIDTH * 0.75, 0, PIECE_WIDTH / 4, PIECE_WIDTH);
+    PIECE_WIDTH *= 0.75; /*Moves the pivot for rotation.*/
   }
-  for(j = PIECE_WIDTH - 1; j >= 0; j--) {
-    for(i = PIECE_WIDTH - 1; i >= 0; i--) {
-      if(pieceOrien == 1) {
+  if(pieceOrien == 1) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
         curPiece[j][i] = TETROMINOES[curType][j][i];
       }
-      else if (pieceOrien == 2) {
+    }
+  }
+  else if (pieceOrien == 2) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
         curPiece[j][i] = TETROMINOES[curType][PIECE_WIDTH - 1 - i][j];
       }
-      else if (pieceOrien == 3) {
+    }
+  }
+  else if (pieceOrien == 3) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
         curPiece[j][i] = TETROMINOES[curType][PIECE_WIDTH - 1 - j][PIECE_WIDTH - 1 - i];
       }
-      else if (pieceOrien == 4) {
+    }
+  }
+  else if (pieceOrien == 4) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
         curPiece[j][i] = TETROMINOES[curType][i][PIECE_WIDTH - 1 - j];
       }
     }
@@ -261,8 +274,11 @@ void copyPiece(bool** destPiece, bool** sourcePiece, int PIECE_WIDTH) {
   }
   return;
 }
-void drawPiece(bool** ledArray, bool** curPiece, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
+void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
   int i, j;
+  if(curType != 0) {
+    PIECE_WIDTH *= 0.75;
+  }
   for(j = PIECE_WIDTH - 1; j >= 0; j--) {
     for(i = PIECE_WIDTH - 1; i >= 0; i--) {
       if(curPiece[j][i] == true) {
@@ -348,7 +364,7 @@ void tetris(bool** ledArray) {
   int score = 0;
   int input = 0;
   int timer = 1;
-  int dropTime = 5; /*Should be > 1; may be decreased for difficulty*/
+  int dropTime = 8; /*Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness*/
 
   /*Solid borders:*/
   drawRectangle(ledArray, true, TOP_MARGIN, LEFT_MARGIN, BOT_END - TOP_MARGIN + 1, LEFT_BORDER);
@@ -363,22 +379,21 @@ void tetris(bool** ledArray) {
   copyPiece(projPiece, curPiece, PIECE_WIDTH);
 
   while(1) {
-    drawPiece(ledArray, curPiece, false, curY, curX, PIECE_WIDTH);
+    drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH);
+    drawPiece(ledArray, projPiece, curType, true, projY, projX, PIECE_WIDTH);
     copyPiece(curPiece, projPiece, PIECE_WIDTH);
     curX = projX;
     curY = projY;
-    drawPiece(ledArray, curPiece, true, curY, curX, PIECE_WIDTH);
     frameTest(ledArray);
-    input = 0;
     input = getLeftInput();
     if (input == 1) { /*Hard drop*/
       while(checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
         projY += SQUARE_WIDTH;
-        drawPiece(ledArray, curPiece, false, curY, curX, PIECE_WIDTH);
+        drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH);
         copyPiece(curPiece, projPiece, PIECE_WIDTH);
         curX = projX;
         curY = projY;
-        drawPiece(ledArray, curPiece, true, curY, curX, PIECE_WIDTH);
+        drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
         frameTest(ledArray);
       }
       projX = INIT_X;
@@ -441,7 +456,7 @@ void tetris(bool** ledArray) {
       }
     }
   }
-  drawPiece(ledArray, curPiece, true, curY, curX, PIECE_WIDTH);
+  drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
   frameTest(ledArray);
   free(doubleBag);
   free2DArray(curPiece, PIECE_WIDTH);
