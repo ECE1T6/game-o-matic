@@ -31,13 +31,25 @@ typedef struct {
 } ScreenData;
 
 /*
+  nanosleep parameter spec
+*/
+typedef struct timespec {
+  time_t tv_sec;
+  long tv_nsec;
+} Timespec;
+
+const Timespec nanospec = {
+  0, 100L
+};
+
+/*
   Clock in data to the column (sinking) registers.
   Hardware: TPIC6B595N acting as sink.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
 void colclk(void) {
   digitalWrite(COLCLK, HIGH);
-  nanosleep(100); 
+  nanosleep(&nanospec, NULL); 
   digitalWrite(COLCLK, LOW);
   return;
 }
@@ -48,7 +60,7 @@ void colclk(void) {
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
-  nanosleep(100);
+  nanosleep(&nanospec, NULL);
   digitalWrite(ROWCLK, LOW);
   return;
 }
@@ -58,7 +70,7 @@ void rowclk(void) {
 */
 void latch(void) {
   digitalWrite(LATCH, HIGH); 
-  nanosleep(100);
+  nanosleep(&nanospec, NULL);
   digitalWrite(LATCH, LOW);
   return;
 }
@@ -157,8 +169,8 @@ void refresh(bool **screen) {
   Thread function calls refresh indefinitely.
 */
 void *render(void *args) {
-  ScreenData *args = (ScreenData*) args;
-  bool **screen = args -> screen;
+  ScreenData *arguments = (ScreenData*) arguments;
+  bool **screen = arguments -> screen;
   while (1) {
     refresh(screen);
   }
