@@ -9,8 +9,8 @@
 /*Linux:*/
 #include <unistd.h>
 
-/*Tetris pieces: (might be stored in tetrominoes.h later)*/
-const bool TETROMINOES[7][8][8] = {
+/*Tetris pieces: (to be stored in tetrominoes.h later)*/
+const bool allTetrominoes[7][8][8] = {
 {
 {0,0,0,0,0,0,0,0},
 {0,0,0,0,0,0,0,0},
@@ -238,28 +238,28 @@ void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH) 
   if(pieceOrien == 1) {
     for(j = PIECE_WIDTH - 1; j >= 0; j--) {
       for(i = PIECE_WIDTH - 1; i >= 0; i--) {
-        curPiece[j][i] = TETROMINOES[curType][j][i];
+        curPiece[j][i] = allTetrominoes[curType][j][i];
       }
     }
   }
   else if (pieceOrien == 2) {
     for(j = PIECE_WIDTH - 1; j >= 0; j--) {
       for(i = PIECE_WIDTH - 1; i >= 0; i--) {
-        curPiece[j][i] = TETROMINOES[curType][PIECE_WIDTH - 1 - i][j];
+        curPiece[j][i] = allTetrominoes[curType][PIECE_WIDTH - 1 - i][j];
       }
     }
   }
   else if (pieceOrien == 3) {
     for(j = PIECE_WIDTH - 1; j >= 0; j--) {
       for(i = PIECE_WIDTH - 1; i >= 0; i--) {
-        curPiece[j][i] = TETROMINOES[curType][PIECE_WIDTH - 1 - j][PIECE_WIDTH - 1 - i];
+        curPiece[j][i] = allTetrominoes[curType][PIECE_WIDTH - 1 - j][PIECE_WIDTH - 1 - i];
       }
     }
   }
   else if (pieceOrien == 4) {
     for(j = PIECE_WIDTH - 1; j >= 0; j--) {
       for(i = PIECE_WIDTH - 1; i >= 0; i--) {
-        curPiece[j][i] = TETROMINOES[curType][i][PIECE_WIDTH - 1 - j];
+        curPiece[j][i] = allTetrominoes[curType][i][PIECE_WIDTH - 1 - j];
       }
     }
   }
@@ -307,26 +307,34 @@ int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, 
   }
   return 0;
 }
-int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int score, int SQUARE_WIDTH) {
-  int i, j;
-  bool breaker = false;
-  for(j = botBound; j >= topBound; j-= SQUARE_WIDTH) {
-    for(i = rightBound; i >= leftBound; i -= SQUARE_WIDTH) {
+int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int score, int curY, int PIECE_WIDTH, int SQUARE_WIDTH) {
+  int i, j, a, b, linesCleared = 0;
+  bool fullLine;
+  for(j = curY; j <= botBound && j < curY + PIECE_WIDTH; j += SQUARE_WIDTH) {
+    printf("%d\n", j);
+    fullLine = true;
+    for(i = leftBound; i <= rightBound; i += SQUARE_WIDTH) {
       if(ledArray[j][i] == false) {
-        breaker = true;
-        break;
+        fullLine = false;
       }
     }
-    if(breaker == true) {
-      break;
+    if(fullLine == true) {
+      printf("fullLine == true\n");
+      for(b = j + SQUARE_WIDTH - 1; b >= topBound + SQUARE_WIDTH; b-- ) {
+        for(a = leftBound; a <= rightBound; a++) {
+          ledArray[b][a] = ledArray[b - SQUARE_WIDTH][a];
+        }
+      }
+      for(b = topBound + SQUARE_WIDTH - 1; b >= topBound; b--) {
+        for(a = leftBound; a <= rightBound; a++) {
+          ledArray[b][a] = false;
+        }
+      }
+      linesCleared++;
     }
   }
-  for(j -= 1; j <= botBound; j++) {
-    for(i = rightBound; i >= leftBound; i--) {
-      ledArray[j][i] = false;
-    }
-    score += 50; /*Points per full line clear divided by SQUARE_WIDTH*/
-  }
+  linesCleared /= SQUARE_WIDTH; /*Actual lines of blocks cleared*/
+  score += linesCleared * 100; /*Constant is points per line clear*/
   return score;
 }
 
@@ -334,8 +342,8 @@ void tetris(bool** ledArray) {
   /*Setting values of the global variables for Tetris:*/
   TOP_MARGIN = 0.0;
   BOT_MARGIN = 0.0;
-  LEFT_MARGIN = 0.0;
-  RIGHT_MARGIN = 0.0;
+  LEFT_MARGIN = 26.0;
+  RIGHT_MARGIN = 26.0;
   BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
   RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
 
@@ -364,7 +372,7 @@ void tetris(bool** ledArray) {
   int score = 0;
   int input = 0;
   int timer = 1;
-  int dropTime = 8; /*Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness*/
+  int dropTime = 15; /*Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness*/
 
   /*Solid borders:*/
   drawRectangle(ledArray, true, TOP_MARGIN, LEFT_MARGIN, BOT_END - TOP_MARGIN + 1, LEFT_BORDER);
@@ -396,6 +404,7 @@ void tetris(bool** ledArray) {
         drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
         frameTest(ledArray);
       }
+      score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
       projX = INIT_X;
       projY = INIT_Y;
       curX = projX;
@@ -411,6 +420,7 @@ void tetris(bool** ledArray) {
     }
     else if(input == 5 || timer++ % dropTime == 0) { /*Soft drop*/
       if(checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
         projX = INIT_X;
         projY = INIT_Y;
         curX = projX;
