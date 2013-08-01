@@ -316,6 +316,7 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
     for(i = leftBound; i <= rightBound; i += SQUARE_WIDTH) {
       if(ledArray[j][i] == false) {
         fullLine = false;
+        break;
       }
     }
     if(fullLine == true) {
