@@ -440,21 +440,61 @@ void tetris(bool** ledArray) {
         timer = 1;
       }
     }
-    else if(input == 9) { /*Spin clockwise (non-functional)*/
+    else if(input == 9) { /*Spin clockwise*/
       pieceOrien++;
       if(pieceOrien > 4) {
         pieceOrien -= 4;
       }
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
-      /*checkOverlap() -> if it returns true then try to bump it?*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX  + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX + 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX - 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien--;
+          if(pieceOrien < 1) {
+            pieceOrien += 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
+        }
+      }
     }
-    else if(input == 10) { /*Spin counterclockwise (non-functional)*/
+    else if(input == 10) { /*Spin counterclockwise*/
       pieceOrien--;
       if(pieceOrien < 1) {
         pieceOrien += 4;
       }
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
-      /*checkOverlap() -> if it returns true then try to bump it?*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX  + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX + 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX - 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien++;
+          if(pieceOrien > 4) {
+            pieceOrien -= 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
+        }
+      }
     }
     else if(input == 3) { /*Move right*/
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
