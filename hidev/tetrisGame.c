@@ -355,7 +355,7 @@ void tetris(bool** ledArray) {
   const int RIGHT_BORDER = 2;
   const int TOP_BORDER = 0;
   const int BOT_BORDER = 2;
-  const int INIT_X = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN - PIECE_WIDTH) / 2 - 1;
+  const int INIT_X = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN - PIECE_WIDTH) / 2 + 1;
   const int INIT_Y = TOP_BORDER;
   srand(time(NULL));
 
