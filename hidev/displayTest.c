@@ -166,7 +166,7 @@ void refresh(bool **screen) {
   Thread function calls refresh indefinitely.
 */
 void *render(void *args) {
-  ScreenData *arguments = (ScreenData*) arguments;
+  ScreenData *arguments = (ScreenData*) args;
   bool **screen = arguments -> screen;
   while (1) {
     refresh(screen);
