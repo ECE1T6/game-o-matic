@@ -33,10 +33,7 @@ typedef struct {
 /*
   nanosleep parameter spec
 */
-typedef struct timespec {
-  time_t tv_sec;
-  long tv_nsec;
-} Timespec;
+typedef struct timespec Timespec;
 
 const Timespec nanospec = {
   0, 100L
@@ -125,7 +122,7 @@ void resetRows(void) {
   int row;
   //Set each of the rows to low except the first row.
   rowInLow();
-  for (int row = UNIT_WIDTH - 1; row > 0; row--) {
+  for (row = UNIT_WIDTH - 1; row > 0; row--) {
     rowclk();
   }
   
@@ -144,7 +141,7 @@ void resetRows(void) {
 */
 void refresh(bool **screen) { 
   int col, row;
-  resetCols();
+  resetRows();
   for (row = UNIT_WIDTH - 1; row >= 0; row--) { 
     for (col = UNIT_LENGTH - 1; col >= 0; col--) {
       if (screen[row][col] == true) {
