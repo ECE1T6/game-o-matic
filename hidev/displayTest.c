@@ -198,7 +198,7 @@ void init(bool **screen) {
   pthread_create(&render_tid, NULL, render, tdata);
   //halt execution until called thread terminates.
   pthread_join(render_tid, NULL);
-
+  free(tdata);
   return;
 }
 

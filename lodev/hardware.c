@@ -1,3 +1,8 @@
+
+/*
+  NOTE: Rough draft - does not follow spec yet.
+*/
+
 //getControl.c -- spawns a thread and checks current state of game controllers.
 
 #include <stdio.h>
