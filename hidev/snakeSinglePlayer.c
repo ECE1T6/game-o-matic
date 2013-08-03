@@ -195,6 +195,10 @@ struct segment *truncateList(struct segment *first, bool **ledArray) {
   return first;
 }
 void endGame(bool **ledArray, int foodY, int foodX, struct segment *first) {
+  int endGameDelay;
+  for(endGameDelay = 0; endGameDelay < 8; endGameDelay++) {
+    frameTest(ledArray);
+  }
   ledArray[foodY][foodX] = false;
   int counter = 0;
   while(first != NULL) {
