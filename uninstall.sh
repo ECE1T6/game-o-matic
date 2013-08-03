@@ -3,8 +3,9 @@
 #NEEDS TO BE RUN WITH SUDO PRIVELEDGES
 
 for i in {1..3}
-sudo rm displayTest /etc/init.d/
-sudo update-rc.d displayTest remove 
+cd /etc/init.d
+sudo rm gameomatic
+sudo update-rc.d gameomatic remove 
 
 echo "Uninstalled."
-exit 1
+exit 0
