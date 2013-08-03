@@ -10,8 +10,8 @@ echo "Pong Compiled."
 #lodev libraries
 cd ../lodev
 
+echo "Compiling low-level libraries..."
 gcc -Wall -pthread main.c init.c register.c render.c -orun -lwiringPi
 echo "Compiled lodev libraries; executable as 'run'."
 echo "...Finished."
 exit 0
-
