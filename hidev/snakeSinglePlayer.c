@@ -2,23 +2,23 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
-/*Windows:*/
+/*Windows: (for testing only)*/
 //#include <windows.h>
-//#include <conio.h> /*For testing only*/
+//#include <conio.h>
 /*Linux:*/
 #include <unistd.h>
 
-/*Variables used by all games:*/
+/*Global variables used by all games:*/
 const float ARRAY_HEIGHT = 38.0;
 const float ARRAY_WIDTH = 76.0;
-float TOP_MARGIN; /*The margins bound the playable area of the game.*/
-float BOTTOM_MARGIN;
+float TOP_MARGIN; /*The margins bound the area controlled by the game.*/
+float BOT_MARGIN;
 float LEFT_MARGIN;
 float RIGHT_MARGIN;
-float BOTTOM_END; /*= ARRAY_HEIGHT - BOTTOM_MARGIN - 1.0*/
+float BOT_END; /*= ARRAY_HEIGHT - BOT_MARGIN - 1.0*/
 float RIGHT_END; /*= ARRAY_WIDTH - RIGHT_MARGIN - 1.0*/
 
-/*Snake-specific structures:*/
+/*Structures:*/
 struct segment {
   int x;
   int y;
@@ -26,7 +26,7 @@ struct segment {
 };
 
 /*Functions usable by all games:*/
-bool** makeArray(float HEIGHT, float WIDTH) {
+bool** make2DArray(float HEIGHT, float WIDTH) {
   int i;
   bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
   for (i = 0; i < HEIGHT; i++) {
@@ -34,7 +34,7 @@ bool** makeArray(float HEIGHT, float WIDTH) {
   }
   return ledArray;
 }
-void fillArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
+void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
   int i, j;
   for(i = 0; i < HEIGHT; i++) {
     for(j = 0; j < WIDTH; j++) {
@@ -43,9 +43,9 @@ void fillArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
   }
   return;
 }
-void freeArray(bool** ledArray) {
+void free2DArray(bool** ledArray, int HEIGHT) {
   int i;
-  for (i = 0; i < ARRAY_HEIGHT; i++) {
+  for (i = 0; i < HEIGHT; i++) {
     free(ledArray[i]);
   }
   free(ledArray);
@@ -67,6 +67,12 @@ int getLeftInput(void) { /*This is a placeholder for a lodev function*/
     else if(input == 'a') {
       return 7;
     }
+    else if(input == 'e') {
+      return 9;
+    }
+    else if(input == 'q') {
+      return 10;
+    }
   }
   */
   return 0;
@@ -76,7 +82,7 @@ int getRightInput(void) { /*This is a placeholder for a lodev function*/
 }
 void printTest(bool** ledArray) {
   int i, j;
-  for(i = TOP_MARGIN; i <= BOTTOM_END; i++) {
+  for(i = TOP_MARGIN; i <= BOT_END; i++) {
     for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
       if(ledArray[i][j] == true) {
         printf("O", ledArray[i][j]);
@@ -89,7 +95,7 @@ void printTest(bool** ledArray) {
   }
   return;
 }
-void testFrame(bool** ledArray) {
+void frameTest(bool** ledArray) {
   /*Windows:*/
   //Sleep(5);
   //system("cls");
@@ -130,7 +136,7 @@ int checkCollision(int newX, int newY, struct segment *first) {
   return 0;
 }
 int checkOutBounds(int headX, int headY) {
-  if(headY < TOP_MARGIN || headY > BOTTOM_END) {
+  if(headY < TOP_MARGIN || headY > BOT_END) {
     return 1;
   }
   if(headX < LEFT_MARGIN || headX > RIGHT_END) {
@@ -189,11 +195,15 @@ struct segment *truncateList(struct segment *first, bool **ledArray) {
   return first;
 }
 void endGame(bool **ledArray, int foodY, int foodX, struct segment *first) {
+  int endGameDelay;
+  for(endGameDelay = 0; endGameDelay < 8; endGameDelay++) {
+    frameTest(ledArray);
+  }
   ledArray[foodY][foodX] = false;
   int counter = 0;
   while(first != NULL) {
     first = truncateList(first, ledArray);
-    testFrame(ledArray);
+    frameTest(ledArray);
   }
 }
 void shiftList(struct segment *first, int headX, int headY, bool **ledArray) {
@@ -218,22 +228,22 @@ void shiftList(struct segment *first, int headX, int headY, bool **ledArray) {
 }
 
 void snake(bool** ledArray) {
-  /*Setting values of the global variables for snake:*/
-  TOP_MARGIN = 0.0;
-  BOTTOM_MARGIN = 0.0;
-  LEFT_MARGIN = 0.0;
-  RIGHT_MARGIN = 0.0;
-  BOTTOM_END = ARRAY_HEIGHT - BOTTOM_MARGIN - 1.0;
+  /*Setting values of the global variables:*/
+  TOP_MARGIN = 10.0;
+  BOT_MARGIN = 10.0;
+  LEFT_MARGIN = 10.0;
+  RIGHT_MARGIN = 10.0;
+  BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
   RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
 
-  /*Snake-specific constants:*/
+  /*Local constants:*/
   const int INITIAL_X = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN) / 2;
-  const int INITIAL_Y = TOP_MARGIN + (BOTTOM_END - TOP_MARGIN) / 2;
+  const int INITIAL_Y = TOP_MARGIN + (BOT_END - TOP_MARGIN) / 2;
   const int INITIAL_SIZE = (int) ((RIGHT_END - LEFT_MARGIN) * 0.1);
   srand(time(NULL));
 
-  /*Snake-specific variables:*/
-  float moveDistance = 0.3; /*Adjustable for difficulty. Must be <= 1.*/
+  /*Local variables:*/
+  float moveDistance = 0.9; /*Adjustable for difficulty. Must be <= 1.*/
   struct segment *first = initializeList(INITIAL_X, INITIAL_Y, INITIAL_SIZE, ledArray);
   float headX = first->x;
   float headY = first->y;
@@ -241,18 +251,18 @@ void snake(bool** ledArray) {
   int visibleMoveDir = 3;
   int foodX;
   int foodY;
-  placeFood(&foodX, &foodY, first, BOTTOM_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
+  placeFood(&foodX, &foodY, first, BOT_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
   int score = 0;
 
   while(1) {
-    testFrame(ledArray);
+    frameTest(ledArray);
     moveDir = moveHeadCoords(moveDir, visibleMoveDir, &headX, &headY, moveDistance);
     if(checkOutBounds(headX + 0.5, headY + 0.5)) {
       break;
     }
     if((int) (headX + 0.5) == foodX && (int) (headY + 0.5) == foodY) {
       first = addToList(first, headX + 0.5, headY + 0.5, ledArray);
-      placeFood(&foodX, &foodY, first, BOTTOM_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
+      placeFood(&foodX, &foodY, first, BOT_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
       score += 10; /*Also change displayed score, if it exists.*/
     }
     else if((int) (headX + 0.5) != first->x || (int) (headY + 0.5) != first->y) {
@@ -270,11 +280,11 @@ void snake(bool** ledArray) {
 int main (void) {
   /*This function's contents are placeholders for a lodev menu.*/
   bool** ledArray;
-  ledArray = makeArray(ARRAY_HEIGHT, ARRAY_WIDTH);
-  fillArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
+  ledArray = make2DArray(ARRAY_HEIGHT, ARRAY_WIDTH);
+  fill2DArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
   int input = 0;
   do {
-    printf("Welcome to snake (official bootleg edition).\nEnter \"1\" to play snake.\nEnter \"0\" to exit.");
+    printf("Welcome to Snake (official bootleg edition).\nEnter \"1\" to play Snake.\nEnter \"0\" to exit.");
     scanf("%d", &input);
   } while(input < 0 || input > 1);
   while (input == 1) {
@@ -284,6 +294,6 @@ int main (void) {
         scanf("%d", &input);
       } while (input < 0 || input > 1);
   }
-  freeArray(ledArray);
+  free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
 }
