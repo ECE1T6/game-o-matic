@@ -355,7 +355,7 @@ void tetris(bool** ledArray) {
   const int RIGHT_BORDER = 2;
   const int TOP_BORDER = 0;
   const int BOT_BORDER = 2;
-  const int INIT_X = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN - PIECE_WIDTH) / 2 - 1;
+  const int INIT_X = LEFT_MARGIN + (RIGHT_END - LEFT_MARGIN - PIECE_WIDTH) / 2 + 1;
   const int INIT_Y = TOP_BORDER;
   srand(time(NULL));
 
@@ -440,21 +440,61 @@ void tetris(bool** ledArray) {
         timer = 1;
       }
     }
-    else if(input == 9) { /*Spin clockwise (non-functional)*/
+    else if(input == 9) { /*Spin clockwise*/
       pieceOrien++;
       if(pieceOrien > 4) {
         pieceOrien -= 4;
       }
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
-      /*checkOverlap() -> if it returns true then try to bump it?*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX  + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX + 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX - 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien--;
+          if(pieceOrien < 1) {
+            pieceOrien += 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
+        }
+      }
     }
-    else if(input == 10) { /*Spin counterclockwise (non-functional)*/
+    else if(input == 10) { /*Spin counterclockwise*/
       pieceOrien--;
       if(pieceOrien < 1) {
         pieceOrien += 4;
       }
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
-      /*checkOverlap() -> if it returns true then try to bump it?*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX  + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX + 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY, projX - 2 * SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projX -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien++;
+          if(pieceOrien > 4) {
+            pieceOrien -= 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH);
+        }
+      }
     }
     else if(input == 3) { /*Move right*/
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX + SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
