@@ -6,16 +6,12 @@ echo "Starting Compilation..."
 cd hidev
 gcc -o pong pong.c -lm
 echo "Pong Compiled."
-gcc -o displayTest displayTest.c -lwiringPi -std=gnu99
-echo "displayTest Compiled."
-#lowdev libraries
 
+#lodev libraries
 cd ../lodev
 
-gcc -o flushScreen flushScreen.c -lwiringPi
-echo "flushScreen Compiled."
-gcc -o printScreen printScreen.c -lwiringPi -std=gnu99
-echo "printScreen Compiled."
+gcc -Wall -pthread main.c init.c register.c render.c -orun -lwiringPi
+echo "Compiled lodev libraries; executable as 'run'."
 echo "...Finished."
-exit 1
+exit 0
 
