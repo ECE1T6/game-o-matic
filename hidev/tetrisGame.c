@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
@@ -76,7 +77,7 @@ const bool allTetrominoes[7][8][8] = {
 {0,0,0,0,0,0,0,0}}
 };
 
-/*Variables used by all games:*/
+/*Global variables used by all games:*/
 const float ARRAY_HEIGHT = 38.0;
 const float ARRAY_WIDTH = 76.0;
 float TOP_MARGIN; /*The margins bound the area controlled by the game.*/
@@ -129,6 +130,20 @@ void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int HEIG
   }
   return;
 }
+void drawCheckerboard(bool** ledArray, int topY, int leftX, int HEIGHT, int WIDTH) {
+  int i, j;
+  for(j = HEIGHT - 1; j >= 0; j--) {
+    for(i = WIDTH - 1; i >= 0; i--) {
+      if((j + i) % 2 == 0) {
+        ledArray[topY + j][leftX + i] = true;
+      }
+      else {
+        ledArray[topY + j][leftX + i] = false;
+      }
+    }
+  }
+  return;
+}
 int getLeftInput(void) { /*This is a placeholder for a lodev function*/
   /*
   if(kbhit()){
@@ -153,9 +168,6 @@ int getLeftInput(void) { /*This is a placeholder for a lodev function*/
     }
   }
   */
-  return 0;
-}
-int getRightInput(void) { /*This is a placeholder for a lodev function*/
   return 0;
 }
 void printTest(bool** ledArray) {
@@ -311,7 +323,6 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
   int i, j, a, b, linesCleared = 0;
   bool fullLine;
   for(j = curY; j <= botBound && j < curY + PIECE_WIDTH; j += SQUARE_WIDTH) {
-    printf("%d\n", j);
     fullLine = true;
     for(i = leftBound; i <= rightBound; i += SQUARE_WIDTH) {
       if(ledArray[j][i] == false) {
@@ -320,7 +331,6 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
       }
     }
     if(fullLine == true) {
-      printf("fullLine == true\n");
       for(b = j + SQUARE_WIDTH - 1; b >= topBound + SQUARE_WIDTH; b-- ) {
         for(a = leftBound; a <= rightBound; a++) {
           ledArray[b][a] = ledArray[b - SQUARE_WIDTH][a];
@@ -337,6 +347,31 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
   linesCleared /= SQUARE_WIDTH; /*Actual lines of blocks cleared*/
   score += linesCleared * 100; /*Constant is points per line clear*/
   return score;
+}
+//addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH);
+int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int SQUARE_WIDTH) {
+  int i, j;
+  bool topOut = false;
+  j = topBound;
+  for(i = leftBound; i <= rightBound; i += SQUARE_WIDTH) {
+    if(ledArray[j][i]) {
+      topOut = true;
+      printf("LOL topout");
+      break;
+    }
+  }
+  for(j = topBound + SQUARE_WIDTH; j <= botBound; j++) {
+    for(i = leftBound; i <= rightBound; i++) {
+      ledArray[j - SQUARE_WIDTH][i] = ledArray[j][i];
+    }
+  }
+  drawCheckerboard(ledArray, botBound - SQUARE_WIDTH + 1, leftBound, SQUARE_WIDTH, rightBound - leftBound + 1);
+  if(topOut == true) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 void tetris(bool** ledArray) {
@@ -374,12 +409,13 @@ void tetris(bool** ledArray) {
   int input = 0;
   int timer = 1;
   int dropTime = 15; /*Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness*/
+  int garbageLines = 0;
 
   /*Solid borders:*/
-  drawRectangle(ledArray, true, TOP_MARGIN, LEFT_MARGIN, BOT_END - TOP_MARGIN + 1, LEFT_BORDER);
-  drawRectangle(ledArray, true, TOP_MARGIN, RIGHT_END + 1 - RIGHT_BORDER, BOT_END - TOP_MARGIN + 1, RIGHT_BORDER);
-  drawRectangle(ledArray, true, TOP_MARGIN, LEFT_MARGIN, TOP_BORDER, RIGHT_END - LEFT_MARGIN + 1);
-  drawRectangle(ledArray, true, BOT_END + 1 - BOT_BORDER, LEFT_MARGIN, BOT_BORDER, RIGHT_END - LEFT_MARGIN + 1);
+  drawCheckerboard(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END - TOP_MARGIN + 1, LEFT_BORDER);
+  drawCheckerboard(ledArray, TOP_MARGIN, RIGHT_END + 1 - RIGHT_BORDER, BOT_END - TOP_MARGIN + 1, RIGHT_BORDER);
+  drawCheckerboard(ledArray, TOP_MARGIN, LEFT_MARGIN, TOP_BORDER, RIGHT_END - LEFT_MARGIN + 1);
+  drawCheckerboard(ledArray, BOT_END + 1 - BOT_BORDER, LEFT_MARGIN, BOT_BORDER, RIGHT_END - LEFT_MARGIN + 1);
 
   /*Current piece state and its next projected state:*/
   bool** curPiece = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
@@ -405,7 +441,17 @@ void tetris(bool** ledArray) {
         drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
         frameTest(ledArray);
       }
-      score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
+      score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER - garbageLines * SQUARE_WIDTH, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
+        /*
+        if(some measure of time has passed) {
+          if (addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH)) {
+            break; //Game loss
+          }
+          else {
+            garbageLines++;
+          }
+        }
+        */
       projX = INIT_X;
       projY = INIT_Y;
       curX = projX;
@@ -421,7 +467,17 @@ void tetris(bool** ledArray) {
     }
     else if(input == 5 || timer++ % dropTime == 0) { /*Soft drop*/
       if(checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
-        score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
+        score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER - garbageLines * SQUARE_WIDTH, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
+        /*
+        if(some measure of time has passed) {
+          if (addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH)) {
+            break; //Game loss
+          }
+          else {
+            garbageLines++;
+          }
+        }
+        */
         projX = INIT_X;
         projY = INIT_Y;
         curX = projX;
