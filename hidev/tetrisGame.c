@@ -300,10 +300,25 @@ void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int
   }
   return;
 }
-int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, bool spawn) {
+void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
   int i, j;
+  int SQUARE_WIDTH = PIECE_WIDTH / 4;
+  if(curType != 0) {
+    PIECE_WIDTH *= 0.75;
+  }
   for(j = PIECE_WIDTH - 1; j >= 0; j -= SQUARE_WIDTH) {
     for(i = PIECE_WIDTH - 1; i >= 0; i -= SQUARE_WIDTH) {
+      if(curPiece[j][i] == true) {
+        ledArray[curY + j][curX + i] = lightsOn;
+      }
+    }
+  }
+  return;
+}
+int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, bool spawn) {
+  int i, j;
+  for(j = 0; j < PIECE_WIDTH; j += SQUARE_WIDTH) {
+    for(i = 0; i < PIECE_WIDTH; i += SQUARE_WIDTH) {
       if(projPiece[j][i] == true && ledArray[projY + j][projX + i] == true) {
         if(spawn == false
            && i + projX - curX < PIECE_WIDTH
@@ -348,7 +363,6 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
   score += linesCleared * 100; /*Constant is points per line clear*/
   return score;
 }
-//addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH);
 int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int SQUARE_WIDTH) {
   int i, j;
   bool topOut = false;
@@ -356,7 +370,6 @@ int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int
   for(i = leftBound; i <= rightBound; i += SQUARE_WIDTH) {
     if(ledArray[j][i]) {
       topOut = true;
-      printf("LOL topout");
       break;
     }
   }
@@ -403,6 +416,7 @@ void tetris(bool** ledArray) {
   float curY = INIT_Y;
   float projX = curX;
   float projY = curY;
+  float shadY = curY;
   int curType = pluckBag(doubleBag);
   int pieceOrien = 1; /*1-4 corresponds to north, east, south, west*/
   int score = 0;
@@ -422,13 +436,22 @@ void tetris(bool** ledArray) {
   importPiece(curPiece, curType, pieceOrien, PIECE_WIDTH);
   bool** projPiece = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
   copyPiece(projPiece, curPiece, PIECE_WIDTH);
+  while(checkOverlap(ledArray, projPiece, curPiece, shadY + SQUARE_WIDTH, curX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+    shadY += SQUARE_WIDTH;
+  }
 
   while(1) {
     drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH);
+    drawShadow(ledArray, curPiece, curType, false, shadY, curX, PIECE_WIDTH);
     drawPiece(ledArray, projPiece, curType, true, projY, projX, PIECE_WIDTH);
     copyPiece(curPiece, projPiece, PIECE_WIDTH);
     curX = projX;
     curY = projY;
+    shadY = curY;
+    while(checkOverlap(ledArray, projPiece, curPiece, shadY + SQUARE_WIDTH, curX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+      shadY += SQUARE_WIDTH;
+    }
+    drawShadow(ledArray, curPiece, curType, true, shadY, curX, PIECE_WIDTH);
     frameTest(ledArray);
     input = getLeftInput();
     if (input == 1) { /*Hard drop*/
@@ -456,6 +479,7 @@ void tetris(bool** ledArray) {
       projY = INIT_Y;
       curX = projX;
       curY = projY;
+      shadY = curY;
       curType = pluckBag(doubleBag);
       pieceOrien = 1;
       timer = 1;
@@ -482,6 +506,7 @@ void tetris(bool** ledArray) {
         projY = INIT_Y;
         curX = projX;
         curY = projY;
+        shadY = curY;
         curType = pluckBag(doubleBag);
         pieceOrien = 1;
         timer = 1;
