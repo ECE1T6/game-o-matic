@@ -53,9 +53,9 @@ void resetRows(void) {
 */
 void refresh(bool **screen) { 
   int col, row;
-  resetRows();
+ resetRows();
   for (row = UNIT_WIDTH - 1; row >= 0; row--) { 
-    for (col = UNIT_LENGTH - 1; col >= 0; col--) {
+    for (col = DISPLAY_LENGTH - 1; col >= 0; col--) {
       if (screen[row][col] == true) {
         colInHigh();
       } else {
@@ -68,7 +68,7 @@ void refresh(bool **screen) {
     //shift to next row the next time the loop executes.
     rowclk();
     //muxing delay (100 us)
-    usleep(100);
+  //  usleep(1);
   }
   
   return;

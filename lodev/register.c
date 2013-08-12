@@ -18,20 +18,25 @@
 /*
   nanosleep parameter spec
 */
-typedef struct timespec Timespec;
 
-const Timespec nanospec = {
-  0, 100L
-};
+#define PAUSE 75
 
 /*
   Clock in data to the column (sinking) registers.
   Hardware: TPIC6B595N acting as sink.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
+void pause(int nanoseconds){
+	int bogomips = 800; //approx bogomips of the processor
+	volatile unsigned long int loops = nanoseconds * bogomips * 0.1;
+	for(loops; loops > 0; loops--);
+	return;
+}
+
+
 void colclk(void) {
   digitalWrite(COLCLK, HIGH);
-  nanosleep(&nanospec, NULL); 
+  pause(PAUSE); 
   digitalWrite(COLCLK, LOW);
   return;
 }
@@ -42,7 +47,7 @@ void colclk(void) {
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
-  nanosleep(&nanospec, NULL);
+  pause(PAUSE);
   digitalWrite(ROWCLK, LOW);
   return;
 }
@@ -52,7 +57,8 @@ void rowclk(void) {
 */
 void latch(void) {
   digitalWrite(LATCH, HIGH); 
-  nanosleep(&nanospec, NULL);
+ // nanosleep(&nanospec, NULL);
+  pause(PAUSE);
   digitalWrite(LATCH, LOW);
   return;
 }
