@@ -55,7 +55,7 @@ void refresh(bool **screen) {
   int col, row;
   resetRows();
   for (row = UNIT_WIDTH - 1; row >= 0; row--) { 
-    for (col = DISPLAY_LENGTH - 1; col >= 0; col--) {
+    for (col = UNIT_LENGTH - 1; col >= 0; col--) {
       if (screen[row][col] == true) {
         colInHigh();
       } else {
