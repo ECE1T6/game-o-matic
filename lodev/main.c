@@ -14,8 +14,12 @@ int main(void) {
   for (row = 0; row < UNIT_WIDTH; row++) {
     screen[row] = (bool*) malloc(UNIT_LENGTH * sizeof(bool));
     for (col = 0; col < UNIT_LENGTH; col++) {
-      if (col%2==0) screen[row][col] = true;
-	else screen[row][col] = false;
+      //Test pattern to make sure data serialization is working as expected.
+      if (col % 2 == 0) {
+      	screen[row][col] = true;
+      } else {
+      	screen[row][col] = false;
+      }
     }
   }
   
