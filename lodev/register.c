@@ -23,10 +23,10 @@
 
 
 void pause() {
-	int bogomips = 800; //approx bogomips of the processor
-	volatile unsigned long int loops = PAUSE * bogomips * 0.1;
-	for (loops; loops > 0; loops--);
-	return;
+  int bogomips = 800; //approx bogomips of the processor
+  volatile unsigned long int loops = PAUSE * bogomips * 0.1;
+  for (loops; loops > 0; loops--);
+  return;
 }
 
 /*
