@@ -53,7 +53,7 @@ void resetRows(void) {
 */
 void refresh(bool **screen) { 
   int col, row;
- resetRows();
+  resetRows();
   for (row = UNIT_WIDTH - 1; row >= 0; row--) { 
     for (col = DISPLAY_LENGTH - 1; col >= 0; col--) {
       if (screen[row][col] == true) {
