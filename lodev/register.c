@@ -21,22 +21,22 @@
 
 #define PAUSE 75
 
+
+void pause() {
+	int bogomips = 800; //approx bogomips of the processor
+	volatile unsigned long int loops = PAUSE * bogomips * 0.1;
+	for (loops; loops > 0; loops--);
+	return;
+}
+
 /*
   Clock in data to the column (sinking) registers.
   Hardware: TPIC6B595N acting as sink.
   100ns delay should be safe; minimum delays can be found on datasheets.
 */
-void pause(int nanoseconds){
-	int bogomips = 800; //approx bogomips of the processor
-	volatile unsigned long int loops = nanoseconds * bogomips * 0.1;
-	for(loops; loops > 0; loops--);
-	return;
-}
-
-
 void colclk(void) {
   digitalWrite(COLCLK, HIGH);
-  pause(PAUSE); 
+  pause(); 
   digitalWrite(COLCLK, LOW);
   return;
 }
@@ -47,7 +47,7 @@ void colclk(void) {
 */
 void rowclk(void) {
   digitalWrite(ROWCLK, HIGH);
-  pause(PAUSE);
+  pause();
   digitalWrite(ROWCLK, LOW);
   return;
 }
@@ -57,8 +57,8 @@ void rowclk(void) {
 */
 void latch(void) {
   digitalWrite(LATCH, HIGH); 
- // nanosleep(&nanospec, NULL);
-  pause(PAUSE);
+	//nanosleep(&nanospec, NULL);
+  pause();
   digitalWrite(LATCH, LOW);
   return;
 }
