@@ -27,7 +27,7 @@ void flush(void) {
 }
 
 /*
-  Sets the column data pins to low, with the exception of
+  Sets the row data pins to low, with the exception of
   the leading data pin, which is set to high.
 */
 void resetRows(void) {
