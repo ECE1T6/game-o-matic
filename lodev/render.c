@@ -68,7 +68,7 @@ void refresh(bool **screen) {
     //shift to next row the next time the loop executes.
     rowclk();
     //muxing delay (100 us)
-  //  usleep(1);
+    //usleep(1);
   }
   
   return;
