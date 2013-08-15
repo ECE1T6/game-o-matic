@@ -6,3 +6,5 @@ RaspberryPi gaming glory: Software to run a 38x76 single-colour LED matrix/displ
 - Low-level programming: writing a library that will provide the key functions + hardware interface
 
 Low-level libraries <a href="https://docs.google.com/document/d/19enZnzPExQ6_HpwOZU4J00wAjfWi3ineDXp8A0TtiM0/edit">specifications sheet</a>
+
+High-livel libraries <a href="https://docs.google.com/document/d/1Qj2QzITVQeXx1bEk0V-lvPFX1IxjPitmZ8NdXVRVyrg/edit">specifications sheet</a>
