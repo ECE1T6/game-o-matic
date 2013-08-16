@@ -4,7 +4,7 @@
 
 cd lodev
 sudo mkdir /etc/init.d/gameomatic
-sudo cp run /etc/init.d/gameomatic
+sudo cp displayTest /etc/init.d/gameomatic
 sudo chmod +x /etc/init.d/gameomatic
 sudo update-rc.d gameomatic defaults 
 
