@@ -13,99 +13,58 @@
 #include <pthread.h>
 
 //#### PIN and CONST. DECLARATIONS ####
-#define RESET 8
 //player 1
 #define JOY1_UP 5
 #define	JOY1_RIGHT 6
 #define JOY1_DOWN 7
 #define JOY1_LEFT 10 
-#define BUTTON1 17
-#define BUTTON2 18
+#define LEFT1 17
+#define RIGHT1 18
 
 //player 2
 #define JOY2_UP 11
 #define	JOY2_RIGHT 12
 #define JOY2_DOWN 13
 #define JOY2_LEFT 14
-#define BUTTON3 19
-#define BUTTON4 20
+#define LEFT2 19
+#define RIGHT2 20
 
 
 struct ctlData {
-		int joy1;
-		int joy2;
-		bool button1;
-		bool button2;
-		bool button3;
-		bool button4;
-		bool reset;
+		unsigned char player1;
+		unsigned char player2;
 	};
+
 
 void getControl(struct ctlData *ctl){
  //code for grabbing positions from GPIO ports
 
-	//Joystick 1
-	if (digitalRead(JOY1_UP)){
-		if (digitalRead(JOY1_LEFT)) 
-			ctl->joy1 = 8;
-		else if (digitalRead(JOY1_RIGHT))
-			ctl->joy1 = 2;
-		else 
-			ctl->joy1 = 1;
-	}
-	else if (digitalRead(JOY1_RIGHT)){
-		if (digitalRead(JOY1_DOWN)) 
-			ctl->joy1 = 4;
-		else
-			ctl->joy1 = 3;
-	}
-	else if (digitalRead(JOY1_DOWN)){
-		if (digitalRead(JOY1_LEFT)) 
-			ctl->joy1 = 6;
-		else
-			ctl->joy1 = 5;
-	}
-	else if (digitalRead(JOY1_LEFT)){ 
-			ctl->joy1 = 7;
-	}
-
-	//Joystick 2
-	if (digitalRead(JOY2_UP)){
-		if (digitalRead(JOY2_LEFT)) 
-			ctl->joy2 = 8;
-		else if (digitalRead(JOY2_RIGHT))
-			ctl->joy2 = 2;
-		else 
-			ctl->joy2 = 1;
-	}
-	else if (digitalRead(JOY2_RIGHT)){
-		if (digitalRead(JOY2_DOWN)) 
-			ctl->joy2 = 4;
-		else
-			ctl->joy2 = 3;
-	}
-	else if (digitalRead(JOY2_DOWN)){
-		if (digitalRead(JOY2_LEFT)) 
-			ctl->joy2 = 6;
-		else
-			ctl->joy2 = 5;
-	}
-	else if (digitalRead(JOY2_LEFT)){ 
-			ctl->joy2 = 7;
-	}
-
-	//Buttons
-	if (digitalRead(BUTTON1))
-		ctl->button1 = true;
-	if (digitalRead(BUTTON2))
-		ctl->button2 = true;
-	if (digitalRead(BUTTON3))
-		ctl->button3 = true;
-	if (digitalRead(BUTTON4))
-		ctl->button4 = true;
-	if (digitalRead(RESET))
-		ctl->reset = true;
+	//Player 1
+	ctl->player1 = digitalRead(JOY1_LEFT); //assign to value, to reset player
+	ctl->player1 = ctl->player1 << 1;
+	ctl->player1 += digitalRead(JOY1_DOWN) << 0;
+	ctl->player1 = ctl->player1 << 1;
+	ctl->player1 += digitalRead(JOY1_RIGHT) << 0;
+	ctl->player1 = ctl->player1 << 1;
+	ctl->player1 += digitalRead(JOY1_UP) << 0;
+	ctl->player1 = ctl->player1 << 1;
+	ctl->player1 += digitalRead(LEFT1) << 0;
+	ctl->player1 = ctl->player1 << 1;
+	ctl->player1 += digitalRead(RIGHT1);
 	
+	//Joystick 2
+	ctl->player2 = digitalRead(JOY1_LEFT); //assign to value, to reset player
+	ctl->player2 = ctl->player2 << 1;
+	ctl->player2 += digitalRead(JOY1_DOWN) << 0;
+	ctl->player2 = ctl->player2 << 1;
+	ctl->player2 += digitalRead(JOY1_RIGHT) << 0;
+	ctl->player2 = ctl->player2 << 1;
+	ctl->player2 += digitalRead(JOY1_UP) << 0;
+	ctl->player2 = ctl->player2 << 1;
+	ctl->player2 += digitalRead(LEFT1) << 0;
+	ctl->player2 = ctl->player2 << 1;
+	ctl->player2 += digitalRead(RIGHT1);
+
 	return;
 }
 

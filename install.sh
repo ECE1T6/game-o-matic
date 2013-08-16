@@ -3,7 +3,8 @@
 #NEEDS TO BE RUN WITH SUDO PRIVELEDGES
 
 cd lodev
-sudo mv run /etc/init.d/gameomatic
+sudo mkdir /etc/init.d/gameomatic
+sudo cp run /etc/init.d/gameomatic
 sudo chmod +x /etc/init.d/gameomatic
 sudo update-rc.d gameomatic defaults 
 
