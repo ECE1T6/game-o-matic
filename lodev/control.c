@@ -3,7 +3,7 @@
   NOTE: Rough draft - does not follow spec yet.
 */
 
-//getControl.c -- spawns a thread and checks current state of game controllers.
+//control.c -- spawns a thread and checks current state of game controllers.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +12,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#include "control.h"
+
 //#### PIN and CONST. DECLARATIONS ####
+//Poll sleep. 4000us = 250Hz.
+#define SLEEP 4000
+
 //player 1
 #define JOY1_UP 5
 #define	JOY1_RIGHT 6
@@ -29,41 +34,34 @@
 #define LEFT2 19
 #define RIGHT2 20
 
-
-struct ctlData {
-		unsigned char player1;
-		unsigned char player2;
-	};
-
-
-void getControl(struct ctlData *ctl){
+void getControl(CtlData *tdata){
  //code for grabbing positions from GPIO ports
 
 	//Player 1
-	ctl->player1 = digitalRead(JOY1_LEFT); //assign to value, to reset player
-	ctl->player1 = ctl->player1 << 1;
-	ctl->player1 += digitalRead(JOY1_DOWN) << 0;
-	ctl->player1 = ctl->player1 << 1;
-	ctl->player1 += digitalRead(JOY1_RIGHT) << 0;
-	ctl->player1 = ctl->player1 << 1;
-	ctl->player1 += digitalRead(JOY1_UP) << 0;
-	ctl->player1 = ctl->player1 << 1;
-	ctl->player1 += digitalRead(LEFT1) << 0;
-	ctl->player1 = ctl->player1 << 1;
-	ctl->player1 += digitalRead(RIGHT1);
+	tdata->player1 = digitalRead(JOY1_LEFT); //assign to value, to reset player
+	tdata->player1 = tdata->player1 << 1;
+	tdata->player1 += digitalRead(JOY1_DOWN) << 0;
+	tdata->player1 = tdata->player1 << 1;
+	tdata->player1 += digitalRead(JOY1_RIGHT) << 0;
+	tdata->player1 = tdata->player1 << 1;
+	tdata->player1 += digitalRead(JOY1_UP) << 0;
+	tdata->player1 = tdata->player1 << 1;
+	tdata->player1 += digitalRead(LEFT1) << 0;
+	tdata->player1 = tdata->player1 << 1;
+	tdata->player1 += digitalRead(RIGHT1);
 	
 	//Joystick 2
-	ctl->player2 = digitalRead(JOY1_LEFT); //assign to value, to reset player
-	ctl->player2 = ctl->player2 << 1;
-	ctl->player2 += digitalRead(JOY1_DOWN) << 0;
-	ctl->player2 = ctl->player2 << 1;
-	ctl->player2 += digitalRead(JOY1_RIGHT) << 0;
-	ctl->player2 = ctl->player2 << 1;
-	ctl->player2 += digitalRead(JOY1_UP) << 0;
-	ctl->player2 = ctl->player2 << 1;
-	ctl->player2 += digitalRead(LEFT1) << 0;
-	ctl->player2 = ctl->player2 << 1;
-	ctl->player2 += digitalRead(RIGHT1);
+	tdata->player2 = digitalRead(JOY1_LEFT); //assign to value, to reset player
+	tdata->player2 = tdata->player2 << 1;
+	tdata->player2 += digitalRead(JOY1_DOWN) << 0;
+	tdata->player2 = tdata->player2 << 1;
+	tdata->player2 += digitalRead(JOY1_RIGHT) << 0;
+	tdata->player2 = tdata->player2 << 1;
+	tdata->player2 += digitalRead(JOY1_UP) << 0;
+	tdata->player2 = tdata->player2 << 1;
+	tdata->player2 += digitalRead(LEFT1) << 0;
+	tdata->player2 = tdata->player2 << 1;
+	tdata->player2 += digitalRead(RIGHT1);
 
 	return;
 }
@@ -73,14 +71,14 @@ void *controllerImplement(void *vptr_value) {
 	for (int i = 5; i<=20; i++){
 	pinMode(i, INPUT);
 	}
-	struct ctlData *ctl = (struct ctlData*) vptr_value;
+	CtlData *tdata = (CtlData*) vptr_value;
 	while(1) {
-		getControl(ctl);
-		usleep(2000); //sleep a bit before next poll -- 2000 = 500Hz
+		getControl(tdata);
+		usleep(SLEEP); //sleep a bit before next poll
 	}
 }
 
-int main(struct ctlData *ctl, pthread_t *tid){//struct of controller parameters, tid pointer
-	int ran = pthread_create(tid, NULL, controllerImplement, (void *) ctl);
+int main(CtlData *tdata, pthread_t *tid){//struct of controller parameters, tid pointer
+	int ran = pthread_create(tid, NULL, controllerImplement, (void *) tdata);
 	return ran; // if value is <0, pthread_create failed.
 }
