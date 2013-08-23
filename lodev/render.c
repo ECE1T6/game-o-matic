@@ -8,6 +8,11 @@
 #include "screen.h"
 
 /*
+	Sets the muxing delay on each line before next line displayed; 1800us = 70fps.
+*/
+#define SLEEP 1800
+
+/*
   Clears the data of both column and row registers to 0 (low).
 */
 void flush(void) {
@@ -67,8 +72,8 @@ void refresh(bool **screen) {
     latch();
     //shift to next row the next time the loop executes.
     rowclk();
-    //muxing delay (100 us)
-    //usleep(1);
+    //muxing delay
+    usleep(SLEEP);
   }
   
   return;

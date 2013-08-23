@@ -19,12 +19,11 @@
   nanosleep parameter spec
 */
 
-#define PAUSE 75
-
+#define PAUSE 25
 
 void pause() {
-  int bogomips = 800; //approx bogomips of the processor
-  volatile unsigned long int loops = PAUSE * bogomips * 0.1;
+  int bogomips = 500; //approx bogomips of the processor
+  volatile unsigned long int loops = PAUSE * bogomips * 0.001;
   for (loops; loops > 0; loops--);
   return;
 }
@@ -32,7 +31,8 @@ void pause() {
 /*
   Clock in data to the column (sinking) registers.
   Hardware: TPIC6B595N acting as sink.
-  100ns delay should be safe; minimum delays can be found on datasheets.
+  25ns delay should be safe; GPIO timeout + 25ns = ~100ns. 
+	Minimum delays can be found on datasheets.
 */
 void colclk(void) {
   digitalWrite(COLCLK, HIGH);
