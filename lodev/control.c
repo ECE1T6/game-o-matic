@@ -1,8 +1,3 @@
-
-/*
-  NOTE: Rough draft - does not follow spec yet.
-*/
-
 //control.c -- spawns a thread and checks current state of game controllers.
 
 #include <stdio.h>
@@ -10,7 +5,6 @@
 #include <wiringPi.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <pthread.h>
 
 #include "control.h"
 
@@ -34,7 +28,7 @@
 #define LEFT2 19
 #define RIGHT2 20
 
-void getControl(CtlData *tdata){
+void getControl(ControlData *tdata) {
  //code for grabbing positions from GPIO ports
 
 	//Player 1
@@ -66,19 +60,14 @@ void getControl(CtlData *tdata){
 	return;
 }
 
-void *controllerImplement(void *vptr_value) {
+void *control(void *args) {
 	wiringPiSetup();
 	for (int i = 5; i<=20; i++){
 	pinMode(i, INPUT);
 	}
-	CtlData *tdata = (CtlData*) vptr_value;
+	ControlData *tdata = (ControlData*) args;
 	while(1) {
 		getControl(tdata);
 		usleep(SLEEP); //sleep a bit before next poll
 	}
-}
-
-int main(CtlData *tdata, pthread_t *tid){//struct of controller parameters, tid pointer
-	int ran = pthread_create(tid, NULL, controllerImplement, (void *) tdata);
-	return ran; // if value is <0, pthread_create failed.
 }

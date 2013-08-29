@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <time.h>
 
 #include "init.h"
 #include "register.h"
@@ -9,7 +8,10 @@
 
 int main(void) {
   initializePins();
+	unsigned char *player1, *player2;
   bool **screen;
+	player1 = (unsigned char*) malloc(sizeof(unsigned char));	
+	player2 = (unsigned char*) malloc(sizeof(unsigned char));
   int col, row;
   screen = (bool**) malloc(UNIT_WIDTH * sizeof(bool*));
   for (row = 0; row < UNIT_WIDTH; row++) {
@@ -24,7 +26,9 @@ int main(void) {
     }
   }
   
-  init(screen);
+  init(screen, player1, player2);
   free(screen);
+	free(player1);
+	free(player2);
   return 0;
 }
