@@ -25,5 +25,6 @@ void init(bool **screen, unsigned char *player1, unsigned char *player2) { //Don
 	pthread_join(control_tid, NULL);
 	free(scrnData);
 	free(ctlData);
+
   return;
 }

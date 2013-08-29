@@ -70,4 +70,6 @@ void *control(void *args) {
 		getControl(tdata);
 		usleep(SLEEP); //sleep a bit before next poll
 	}
+
+	return NULL;
 }
