@@ -11,7 +11,7 @@ echo "Pong Compiled."
 cd ../lodev
 
 echo "Compiling low-level libraries..."
-gcc -Wall -pthread displayTest.c init.c register.c render.c control.c -o displayTest -lwiringPi
+gcc -Wall -pthread displayTest.c init.c register.c render.c control.c -o displayTest -lwiringPi -std=gnu99
 echo "Compiled lodev libraries; executable as 'run'."
 echo "...Finished."
 exit 0
