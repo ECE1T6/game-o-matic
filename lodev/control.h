@@ -13,5 +13,5 @@ void getControl(ControlData *tdata);
 
 #ifndef CONTROL_CONTROL_GUARD
 #define CONTROL_CONTROL_GUARD
-void *control(void *args)
+void *control(void *args);
 #endif
