@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "init.h"
+#include "lodevInit.h"
 #include "register.h"
 #include "screen.h"
 

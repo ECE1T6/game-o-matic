@@ -1,16 +1,17 @@
 //#include "stdafx.h" //have this for C++
 //#include "targetver.h" //have this for C++
-#include "characters.h"
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
 #include <stdbool.h>//have this for C
 
+#include "fontRound.h"
+#include "fontSquare.h"
 
 const int CHRCX = 5;//dimensions of a single character in pixels
 const int CHRCY = 7;
-const int BOARDX = 64;//total number of pixels in the board
-const int BOARDY = 48;
+const int BOARDX = 76;//total number of pixels in the board
+const int BOARDY = 38;
 bool board[BOARDY][BOARDX] = {false};
 
 
