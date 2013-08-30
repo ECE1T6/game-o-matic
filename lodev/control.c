@@ -31,7 +31,7 @@
 
 
 void setDigit(unsigned char *player, int button, int binaryDigit){
-	player = player | ((unsigned char*)(digitalRead(button)) << (unsigned char*) binaryDigit); //switch this digit to the current control state
+	*player = (int) *player | ((digitalRead(button)) << binaryDigit); //switch this digit to the current control state
 	return;
 }
 
