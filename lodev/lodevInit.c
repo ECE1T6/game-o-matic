@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#include "init.h"
+#include "lodevInit.h"
 #include "render.h"
 #include "screen.h"
 #include "control.h"
