@@ -28,34 +28,27 @@
 #define LEFT2 19
 #define RIGHT2 20
 
+
+
+void setDigit(unsigned char *player, int button, int binaryDigit){
+	player = player | ((digitalRead(button)) << binaryDigit); //switch this digit to the current control state
+	return;
+}
+
 void getControl(ControlData *tdata) {
  //code for grabbing positions from GPIO ports
 
-	//Player 1
-	tdata->player1 = digitalRead(JOY1_LEFT); //assign to value, to reset player
-	tdata->player1 = tdata->player1 << 1;
-	tdata->player1 += digitalRead(JOY1_DOWN) << 0;
-	tdata->player1 = tdata->player1 << 1;
-	tdata->player1 += digitalRead(JOY1_RIGHT) << 0;
-	tdata->player1 = tdata->player1 << 1;
-	tdata->player1 += digitalRead(JOY1_UP) << 0;
-	tdata->player1 = tdata->player1 << 1;
-	tdata->player1 += digitalRead(LEFT1) << 0;
-	tdata->player1 = tdata->player1 << 1;
-	tdata->player1 += digitalRead(RIGHT1);
-	
-	//Joystick 2
-	tdata->player2 = digitalRead(JOY1_LEFT); //assign to value, to reset player
-	tdata->player2 = tdata->player2 << 1;
-	tdata->player2 += digitalRead(JOY1_DOWN) << 0;
-	tdata->player2 = tdata->player2 << 1;
-	tdata->player2 += digitalRead(JOY1_RIGHT) << 0;
-	tdata->player2 = tdata->player2 << 1;
-	tdata->player2 += digitalRead(JOY1_UP) << 0;
-	tdata->player2 = tdata->player2 << 1;
-	tdata->player2 += digitalRead(LEFT1) << 0;
-	tdata->player2 = tdata->player2 << 1;
-	tdata->player2 += digitalRead(RIGHT1);
+	const unsigned char *player [2] = {tdata->player1, tdata->player2};
+	const int button [2][6] = {
+														{RIGHT1, LEFT1, JOY1_UP, JOY1_RIGHT, JOY1_DOWN, JOY1_LEFT},
+														{RIGHT2, LEFT2, JOY2_UP, JOY2_RIGHT, JOY2_DOWN, JOY2_LEFT},
+														};
+
+	for (int i = 0; i++; i<2){
+			for (int j =0; j++; j<6){
+				setDigit(player[i], button[i][j], j);
+			}
+	}
 
 	return;
 }

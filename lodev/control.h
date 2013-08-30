@@ -6,6 +6,11 @@ typedef struct{
 } ControlData;
 #endif
 
+#ifndef CONTROL_SETDIGIT_GUARD
+#define CONTROL_SETDIGIT_GUARD
+void setDigit(unsigned char *player, int button, int binaryDigit);
+#endif
+
 #ifndef CONTROL_GETCONTROL_GUARD
 #define CONTROL_GETCONTROL_GUARD
 void getControl(ControlData *tdata);
