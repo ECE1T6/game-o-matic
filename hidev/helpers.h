@@ -1,3 +1,13 @@
+#ifndef HELPERS_FREEZEFRAME_GUARD
+#define HELPERS_FREEZEFRAME_GUARD
+void freezeFrame(unsigned int frames);
+#endif
+
+#ifndef HELPERS_PRINTSCORE_GUARD
+#define HELPERS_PRINTSCORE_GUARD
+void printScore(int score, char *position);
+#endif
+
 #ifndef HELPERS_MAKEARRAY_GUARD
 #define HELPERS_MAKEARRAY_GUARD
 bool** makeArray(float HEIGHT, float WIDTH);
@@ -5,12 +15,12 @@ bool** makeArray(float HEIGHT, float WIDTH);
 
 #ifndef HELPERS_FILLARRAY_GUARD
 #define HELPERS_FILLARRAY_GUARD
-void fillArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn);
+void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn);
 #endif
 
 #ifndef HELPERS_FREEARRAY_GUARD
 #define HELPERS_FREEARRAY_GUARD
-freeArray(bool** ledArray);
+free2DArray(bool** ledArray);
 #endif
 
 #ifndef HELPERS_DRAWRECTANGLE_GUARD
@@ -25,12 +35,12 @@ int getJoystick(unsigned char player);
 
 #ifndef HELPERS_GETLEFTBUTTON_GUARD
 #define HELPERS_GETLEFTBUTTON_GUARD
-int getLeftButton(unsigned char player);
+bool getLeftButton(unsigned char player);
 #endif
 
 #ifndef HELPERS_GETRIGHTBUTTON_GUARD
 #define HELPERS_GETRIGHTBUTTON_GUARD
-int getRightButton(unsigned char player);
+bool getRightButton(unsigned char player);
 #endif
 
 #ifndef HELPERS_PRINTTEST_GUARD
@@ -38,3 +48,7 @@ int getRightButton(unsigned char player);
 void printTest(bool** ledArray);
 #endif
 
+#ifndef HELPERS_FRAMETEST_GUARD
+#define HELPERS_FRAMETEST_GUARD
+void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END);
+#endif
