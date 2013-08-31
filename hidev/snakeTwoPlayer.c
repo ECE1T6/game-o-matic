@@ -1,31 +1,99 @@
+/*
+This version of Two-Player Snake includes test input-handling which can be enabled in Windows by:
+- de-commenting everything below the two "Windows:" tags
+- commenting everything below the "Linux:" tags
+- de-commenting the bodies of getLeftInput() and getRightInput()
+Control of the respective snakes is then linked to WASD and IJKL in theory, but considerations for
+buffered keyboard input have not been made so only the first snake may be controlled without joysticks
+(using WASD).
+
+For further simplicity, this version does not visualize the snakes collapsing at the end of the game;
+however, this functionality will occur automatically with the display functions working in another
+thread and with a sufficiently long pause implemented in freezeFrame().
+
+For the purposes of reading and attempting optimization, one may delete all Windows-reliant code and
+all definitions under "Test functions:" including all calls to them. Ignore the contents of main().
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
-/*Windows: (for testing only)*/
+//Windows (for testing only):
 //#include <windows.h>
 //#include <conio.h>
-/*Linux:*/
+//Linux:
 #include <unistd.h>
 
-/*Global variables used by all games:*/
-const float ARRAY_HEIGHT = 38.0;
-const float ARRAY_WIDTH = 76.0;
-float TOP_MARGIN; /*The margins bound the area controlled by the game.*/
-float BOT_MARGIN;
-float LEFT_MARGIN;
-float RIGHT_MARGIN;
-float BOT_END; /*= ARRAY_HEIGHT - BOT_MARGIN - 1.0*/
-float RIGHT_END; /*= ARRAY_WIDTH - RIGHT_MARGIN - 1.0*/
-
-/*Structures:*/
+//Structures:
 struct segment {
   int x;
   int y;
   struct segment *next;
 };
 
-/*Functions usable by all games:*/
+//Game-agnostic functions (require lodev support):
+void freezeFrame(void) {
+  //Call a sleep function roughly the length of a frame. Adjust for aesthetics.
+  usleep(50000);
+}
+int getLeftInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()) {
+    int input = getch();
+    if(input == 'w') {
+      return 1;
+    }
+    else if(input == 'd') {
+      return 3;
+    }
+    else if(input == 's') {
+      return 5;
+    }
+    else if(input == 'a') {
+      return 7;
+    }
+    else if(input == 'e') {
+      return 9;
+    }
+    else if(input == 'q') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+int getRightInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()) {
+    int input = getch();
+    if(input == 'i') {
+      return 1;
+    }
+    else if(input == 'l') {
+      return 3;
+    }
+    else if(input == 'k') {
+      return 5;
+    }
+    else if(input == 'j') {
+      return 7;
+    }
+    else if(input == 'o') {
+      return 9;
+    }
+    else if(input == 'u') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+void printWinner(int winner) { //This is a placeholder for a lodev function
+  //This should take 1 or 2 and congradulate the corresponding player.
+}
+
+//Test functions (remove in final version):
 bool** make2DArray(float HEIGHT, float WIDTH) {
   int i;
   bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
@@ -51,59 +119,7 @@ void free2DArray(bool** ledArray, int HEIGHT) {
   free(ledArray);
   return;
 }
-int getLeftInput(void) { /*This is a placeholder for a lodev function*/
-  /*
-  if(kbhit()) {
-    int input = getch();
-    if(input == 'w') {
-      return 1;
-    }
-    else if(input == 'd') {
-      return 3;
-    }
-    else if(input == 's') {
-      return 5;
-    }
-    else if(input == 'a') {
-      return 7;
-    }
-    else if(input == 'e') {
-      return 9;
-    }
-    else if(input == 'q') {
-      return 10;
-    }
-  }
-  */
-  return 0;
-}
-int getRightInput(void) { /*This is a placeholder for a lodev function*/
-  /*
-  if(kbhit()) {
-    int input = getch();
-    if(input == 'i') {
-      return 1;
-    }
-    else if(input == 'l') {
-      return 3;
-    }
-    else if(input == 'k') {
-      return 5;
-    }
-    else if(input == 'j') {
-      return 7;
-    }
-    else if(input == 'o') {
-      return 9;
-    }
-    else if(input == 'u') {
-      return 10;
-    }
-  }
-  */
-  return 0;
-}
-void printTest(bool** ledArray) {
+void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
   int i, j;
   for(i = TOP_MARGIN; i <= BOT_END; i++) {
     for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
@@ -118,18 +134,18 @@ void printTest(bool** ledArray) {
   }
   return;
 }
-void frameTest(bool** ledArray) {
-  /*Windows:*/
+void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  //Windows:
   //Sleep(5);
   //system("cls");
-  /*Linux:*/
+  //Linux:
   usleep(50000);
   system("clear");
 
-  printTest(ledArray);
+  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
 }
 
-/*Snake-specific functions:*/
+//Snake-specific functions:
 struct segment *addToList(struct segment *first, int newX, int newY, bool **ledArray) {
   struct segment *newSegment;
   newSegment = malloc(sizeof(struct segment));
@@ -155,6 +171,7 @@ struct segment *initializeList(int INITIAL_X, int INITIAL_Y, int INITIAL_SIZE, b
   return first;
 }
 int checkCollision(int newX, int newY, struct segment *first) {
+  //Returns 1 if (newX, newY) coincides with any coordinate pair described in a segment list
   struct segment *place;
   place = first;
   while (place != NULL) {
@@ -165,11 +182,8 @@ int checkCollision(int newX, int newY, struct segment *first) {
   }
   return 0;
 }
-int checkOutBounds(int headX, int headY) {
-  if(headY < TOP_MARGIN || headY > BOT_END) {
-    return 1;
-  }
-  if(headX < LEFT_MARGIN || headX > RIGHT_END) {
+int checkOutBounds(int headX, int headY, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  if(headY < TOP_MARGIN || headY > BOT_END || headX < LEFT_MARGIN || headX > RIGHT_END) {
     return 1;
   }
   return 0;
@@ -178,11 +192,12 @@ void placeFood(int *foodX, int *foodY, struct segment *first, struct segment *fi
   do {
     *foodY = rand() % HEIGHT + FIRST_TOP;
     *foodX = rand() % WIDTH + FIRST_LEFT;
-  } while (checkCollision(*foodX, *foodY, first) || checkCollision(*foodX, *foodY, first2) || ledArray[*foodY][*foodX] == true);
+  } while (ledArray[*foodY][*foodX] == true);
   ledArray[*foodY][*foodX] = true;
   return;
 }
 int moveHeadCoords(int moveDir, int visibleMoveDir, float *headX, float *headY, float moveDistance, int player) {
+  //Moves the head coordinates but does not modify any list.
   int previousMoveDir = moveDir;
   if(player == 1) {
     moveDir = getLeftInput();
@@ -190,11 +205,10 @@ int moveHeadCoords(int moveDir, int visibleMoveDir, float *headX, float *headY, 
   else {
     moveDir = getRightInput();
   }
-  printf("%d", moveDir);
-  if (moveDir != 1 && moveDir != 3 && moveDir != 5 && moveDir != 7) { /*Enforcing cardinal directions*/
+  if (moveDir != 1 && moveDir != 3 && moveDir != 5 && moveDir != 7) { //Enforcing cardinal directions
     moveDir = previousMoveDir;
   }
-  else if(moveDir - visibleMoveDir == 4 || visibleMoveDir - moveDir == 4) { /*Moving into previous segments is disallowed*/
+  else if(moveDir - visibleMoveDir == 4 || visibleMoveDir - moveDir == 4) { //Moving into previous segments is disallowed
     moveDir = previousMoveDir;
   }
   if (moveDir == 1) {
@@ -212,6 +226,7 @@ int moveHeadCoords(int moveDir, int visibleMoveDir, float *headX, float *headY, 
   return moveDir;
 }
 struct segment *truncateList(struct segment *first, bool **ledArray) {
+  //Removes the last structure of any list.
   struct segment *current, *previous;
   current = first;
   previous = NULL;
@@ -219,7 +234,7 @@ struct segment *truncateList(struct segment *first, bool **ledArray) {
     previous = current;
     current = current->next;
   }
-  if (previous == NULL) { /*i.e. if the last segment is being deleted.*/
+  if (previous == NULL) { //i.e. if the final segment is being deleted.
     ledArray[current->y][current->x] = false;
     free(current);
     first = NULL;
@@ -230,20 +245,20 @@ struct segment *truncateList(struct segment *first, bool **ledArray) {
   free(current);
   return first;
 }
-void endGame(bool **ledArray, int foodY, int foodX, int foodY2, int foodX2, struct segment *first, struct segment *first2, int winner) {
+void endGame(bool **ledArray, int foodY, int foodX, int foodY2, int foodX2, struct segment *first, struct segment *first2) {
   int endGameDelay;
   for(endGameDelay = 0; endGameDelay < 8; endGameDelay++) {
-    frameTest(ledArray);
+    freezeFrame();
   }
   ledArray[foodY][foodX] = false;
   ledArray[foodY2][foodX2] = false;
   while(first != NULL) {
     first = truncateList(first, ledArray);
-    frameTest(ledArray);
+    freezeFrame();
   }
   while(first2 != NULL) {
     first2 = truncateList(first2, ledArray);
-    frameTest(ledArray);
+    freezeFrame();
   }
   return;
 }
@@ -269,53 +284,56 @@ void shiftList(struct segment *first, int headX, int headY, bool **ledArray) {
 }
 
 void snake(bool** ledArray) {
-  /*Setting values of the global variables:*/
-  TOP_MARGIN = 5.0;
-  BOT_MARGIN = 5.0;
-  LEFT_MARGIN = 10.0;
-  RIGHT_MARGIN = 10.0;
-  BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
-  RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
 
-  /*Local constants:*/
+  //Playfield constants:
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
+  const float TOP_MARGIN = 5.0; //The margins bound the area controlled by the game.
+  const float BOT_MARGIN = 5.0;
+  const float LEFT_MARGIN = 10.0;
+  const float RIGHT_MARGIN = 10.0;
+  const float BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
+  const float RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
+
+  //Snake-initializing constants:
   const int INITIAL_X = (RIGHT_END - LEFT_MARGIN) /6;
   const int INITIAL_Y = (BOT_END - TOP_MARGIN) / 6;
   const int INITIAL_SIZE = (int) ((RIGHT_END - LEFT_MARGIN) * 0.1);
+
+  //Miscellaneous initialization:
+  float moveDistance = 0.9; //Increase for speed and difficulty. Must be <= 1.
+  int winner = 0;
   srand(time(NULL));
 
-  /*Miscellaneous variables:*/
-  float moveDistance = 0.9; /*Increase for speed and difficulty. Must be <= 1.*/
-  int winner = 0;
-
-  /*Player 1:*/
-  int moveDir = 3; /*no move == 0, up == 1, right == 3, down == 5, left == 7*/
+  //Player 1:
+  int moveDir = 3; //no move == 0, up == 1, right == 3, down == 5, left == 7
   int visibleMoveDir = 3;
   struct segment *first = initializeList(LEFT_MARGIN + INITIAL_X, TOP_MARGIN + INITIAL_Y, INITIAL_SIZE, ledArray, moveDir);
   float headX = first->x;
   float headY = first->y;
 
-  /*Player 2:*/
-  int moveDir2 = 7; /*no move == 0, up == 1, right == 3, down == 5, left == 7*/
+  //Player 2:
+  int moveDir2 = 7; //no move == 0, up == 1, right == 3, down == 5, left == 7
   int visibleMoveDir2 = 7;
   struct segment *first2 = initializeList(RIGHT_END - INITIAL_X, BOT_END - INITIAL_Y, INITIAL_SIZE, ledArray, moveDir2);
   float headX2 = first2->x;
   float headY2 = first2->y;
 
-  /*Food spawns:*/
+  //Food spawns:
   int foodX, foodY;
   placeFood(&foodX, &foodY, first, first2, BOT_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
   int foodX2, foodY2;
   placeFood(&foodX2, &foodY2, first, first2, BOT_END - TOP_MARGIN, RIGHT_END - LEFT_MARGIN, TOP_MARGIN, LEFT_MARGIN, ledArray);
 
   while(1) {
-    frameTest(ledArray);
+    frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
     moveDir = moveHeadCoords(moveDir, visibleMoveDir, &headX, &headY, moveDistance, 1);
     moveDir2 = moveHeadCoords(moveDir2, visibleMoveDir2, &headX2, &headY2, moveDistance, 2);
-    if(checkOutBounds(headX + 0.5, headY + 0.5)) {
+    if(checkOutBounds(headX + 0.5, headY + 0.5, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END)) {
       winner = 2;
       break;
     }
-    else if(checkOutBounds(headX2 + 0.5, headY2 + 0.5)) {
+    else if(checkOutBounds(headX2 + 0.5, headY2 + 0.5, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END)) {
       winner = 1;
       break;
     }
@@ -364,33 +382,19 @@ void snake(bool** ledArray) {
       break;
     }
   }
-  endGame(ledArray, foodY, foodX, foodY2, foodX2, first, first2, winner);
-  if(winner != 0) {
-    printf("Player %d wins!\n", winner);
-  }
-  else {
-    printf("Wahhh? A tie game!\n");
-  }
+  endGame(ledArray, foodY, foodX, foodY2, foodX2, first, first2);
+  printWinner(winner);
   return;
 }
 
 int main (void) {
-  /*This function's contents are placeholders for a lodev menu.*/
+  //This function's contents are throwaway. They mimic a lodev menu.
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
   bool** ledArray;
   ledArray = make2DArray(ARRAY_HEIGHT, ARRAY_WIDTH);
   fill2DArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
-  int input = 0;
-  do {
-    printf("Welcome to two-player Snake (official bootleg edition).\nEnter \"1\" to play Snake.\nEnter \"0\" to exit.");
-    scanf("%d", &input);
-  } while(input < 0 || input > 1);
-  while (input == 1) {
-      snake(ledArray);
-      do {
-        printf("Enter \"1\" to play again.\nEnter \"0\" to exit.\n");
-        scanf("%d", &input);
-      } while (input < 0 || input > 1);
-  }
+  snake(ledArray);
   free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
 }
