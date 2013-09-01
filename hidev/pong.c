@@ -1,196 +1,388 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <stdbool.h>
-/*Windows:*/
+//Windows (for testing only):
 //#include <windows.h>
-/*Linux:*/
+//#include <conio.h>
+//Linux:
 #include <unistd.h>
-/*C++:*/
-//#include "stdafx.h"
-//#include "targetver.h"
+
+//Game-agnostic functions (corresponding to helper.h functions, roughly right now):
+void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int HEIGHT, int WIDTH) {
+  int i, j;
+  for(j = HEIGHT - 1; j >= 0; j--) {
+    for(i = WIDTH - 1; i >= 0; i--) {
+      ledArray[topY + j][leftX + i] = lightsOn;
+    }
+  }
+  return;
+}
+int getLeftInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()) {
+    int input = getch();
+    if(input == 'w') {
+      return 1;
+    }
+    else if(input == 'd') {
+      return 3;
+    }
+    else if(input == 's') {
+      return 5;
+    }
+    else if(input == 'a') {
+      return 7;
+    }
+    else if(input == 'e') {
+      return 9;
+    }
+    else if(input == 'q') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+int getRightInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()) {
+    int input = getch();
+    if(input == 'i') {
+      return 1;
+    }
+    else if(input == 'l') {
+      return 3;
+    }
+    else if(input == 'k') {
+      return 5;
+    }
+    else if(input == 'j') {
+      return 7;
+    }
+    else if(input == 'o') {
+      return 9;
+    }
+    else if(input == 'u') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+void printWinner(int winner) { //This is a placeholder for a lodev function
+  //This should take 1 or 2 and congradulate the corresponding player.
+}
+
+//Test functions (remove in final version):
+bool** make2DArray(float HEIGHT, float WIDTH) {
+  int i;
+  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
+  for (i = 0; i < HEIGHT; i++) {
+    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
+  }
+  return ledArray;
+}
+void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
+  int i, j;
+  for(i = 0; i < HEIGHT; i++) {
+    for(j = 0; j < WIDTH; j++) {
+      ledArray[i][j] = lightsOn;
+    }
+  }
+  return;
+}
+void free2DArray(bool** ledArray, int HEIGHT) {
+  int i;
+  for (i = 0; i < HEIGHT; i++) {
+    free(ledArray[i]);
+  }
+  free(ledArray);
+  return;
+}
+void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  int i, j;
+  for(i = TOP_MARGIN; i <= BOT_END; i++) {
+    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
+      if(ledArray[i][j] == true) {
+        printf("O", ledArray[i][j]);
+      }
+      else {
+        printf("*", ledArray[i][j]);
+      }
+    }
+    printf("\n");
+  }
+  return;
+}
+void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  //Windows:
+  //Sleep(5);
+  //system("cls");
+  //Linux:
+  usleep(50000);
+  system("clear");
+
+  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+}
 
 /*Pong-specific functions:*/
-void drawBall(bool** ledArray, bool lightsOn, int topY, int leftX, int BALL_DIAMETER) {
+void drawBall(bool** ledArray, bool lightsOn, int topY, int leftX, int BALL_DIAMETER, float LEFT_MARGIN, float RIGHT_END) {
   int i, j;
-  for(j = BALL_DIAMETER; j >= 0; j--) {
-    if(leftX + j <= RIGHT_END && leftX + BALL_DIAMETER + j >= LEFT_MARGIN) {
-      for(i = BALL_DIAMETER; i >= 0; i--) {
+  for(j = BALL_DIAMETER - 1; j >= 0; j--) {
+    if(leftX + j <= RIGHT_END && leftX + j >= LEFT_MARGIN) {
+      for(i = BALL_DIAMETER - 1; i >= 0; i--) {
         ledArray[topY + i][leftX + j] = lightsOn;
       }
     }
   }
   return;
 }
-int checkWallImpact(float* ballY, int BALL_DIAMETER) {
-  if(*ballY < TOP_MARGIN) { /*Deflection off of the top side*/
+int checkWallImpact(float* ballY, int BALL_DIAMETER, float TOP_MARGIN, float BOT_END) {
+  //Modifies ballY and returns -1 if there was an impact
+  if(*ballY < TOP_MARGIN) {
     *ballY = TOP_MARGIN + (TOP_MARGIN - *ballY);
     return - 1;
   }
-  else if(*ballY + BALL_DIAMETER > BOTTOM_END) { /*Deflection off of the bottom side*/
-    *ballY = BOTTOM_END - BALL_DIAMETER - (*ballY - BOTTOM_END + BALL_DIAMETER);
+  else if(*ballY + BALL_DIAMETER - 1 > BOT_END) {
+    *ballY = BOT_END - (BALL_DIAMETER - 1) - (*ballY + BALL_DIAMETER - 1 - BOT_END);
     return - 1;
   }
   return 1;
 }
-int checkLeftImpact(float ballY, float* ballX, float LEFT_IMPACT_X, float ballDeltaY, float ballDeltaX, int BALL_DIAMETER, float leftPaddleY, int PADDLE_HEIGHT) {
-  int ballImpactY = ballY - (LEFT_IMPACT_X - *ballX) * ballDeltaY / ballDeltaX;
-  /*Checking if the ball hit the inner side of left_paddle: (two conditions for vertical position, one checking if impact occurred this cycle*/
-  if(ballImpactY + BALL_DIAMETER >= leftPaddleY && ballImpactY <= leftPaddleY + PADDLE_HEIGHT - 1 && *ballX - ballDeltaX >= LEFT_IMPACT_X) {
-    /*These ignore imparted paddle momentum right now:*/
+void checkLeftImpact(float ballY, float* ballX, float LEFT_IMPACT_X, float* ballDeltaY, float* ballDeltaX, int BALL_DIAMETER, float leftPadY, int PAD_HEIGHT, float MAX_BALL_Y_SPEED) {
+  float ballImpactY = ballY + (LEFT_IMPACT_X - *ballX) * (*ballDeltaY / *ballDeltaX);
+  //Checking if the ball hit the inner side of left_paddle:
+  //(two conditions for vertical position, one checking if impact occurred this cycle
+  if(ballImpactY + BALL_DIAMETER - 1 >= leftPadY
+     && ballImpactY <= leftPadY + PAD_HEIGHT - 1
+     && *ballX - *ballDeltaX >= LEFT_IMPACT_X) {
+    float impactSection = (ballImpactY - (leftPadY - BALL_DIAMETER + 1)) * 8 / (PAD_HEIGHT + BALL_DIAMETER);
+    if(impactSection <= 1){
+      *ballDeltaY = - MAX_BALL_Y_SPEED;
+    }
+    else if(impactSection <= 2){
+      *ballDeltaY = - MAX_BALL_Y_SPEED * 3 / 4;
+    }
+    else if(impactSection <= 3){
+      *ballDeltaY = - MAX_BALL_Y_SPEED * 2 / 4;
+    }
+    else if(impactSection <= 4){
+      *ballDeltaY = - MAX_BALL_Y_SPEED / 4;
+    }
+    else if(impactSection <= 5){
+      *ballDeltaY = MAX_BALL_Y_SPEED / 4;
+    }
+    else if(impactSection <= 6){
+      *ballDeltaY = MAX_BALL_Y_SPEED * 2 / 4;
+    }
+    else if(impactSection <= 7){
+      *ballDeltaY = MAX_BALL_Y_SPEED * 3 / 4;
+    }
+    else if(impactSection <= 8){
+      *ballDeltaY = MAX_BALL_Y_SPEED;
+    }
     *ballX = LEFT_IMPACT_X + (LEFT_IMPACT_X - *ballX);
-    return - 1;
+    if(- *ballDeltaX * 1.05 < 1) {
+      *ballDeltaX *= 1.05;
+    }
+    *ballDeltaX *= - 1.0;
   }
-  return 1;
+  return;
 }
-int checkRightImpact(float ballY, float* ballX, float RIGHT_IMPACT_X, float ballDeltaY, float ballDeltaX, int BALL_DIAMETER, float rightPaddleY, int PADDLE_HEIGHT) {
-  int ballImpactY = ballY - (*ballX - RIGHT_IMPACT_X) * (ballDeltaY / ballDeltaX);
-  /*Checking if the ball hit the inner side of right_paddle: (two conditions for vertical position, one checking if impact occurred this cycle)*/
-  if(ballImpactY + BALL_DIAMETER >= rightPaddleY && ballImpactY <= rightPaddleY + PADDLE_HEIGHT - 1 && *ballX - ballDeltaX <= RIGHT_IMPACT_X) {
-    /*These ignore imparted paddle momentum right now:*/
+void checkRightImpact(float ballY, float* ballX, float RIGHT_IMPACT_X, float* ballDeltaY, float* ballDeltaX, int BALL_DIAMETER, float rightPadY, int PAD_HEIGHT, float MAX_BALL_Y_SPEED) {
+  float ballImpactY = ballY - (*ballX - RIGHT_IMPACT_X) * (*ballDeltaY / *ballDeltaX);
+  //Checking if the ball hit the inner side of right_paddle:
+  //(two conditions for vertical position, one checking if impact occurred this cycle)
+  if(ballImpactY + BALL_DIAMETER - 1 >= rightPadY
+     && ballImpactY <= rightPadY + PAD_HEIGHT - 1
+     && *ballX - *ballDeltaX <= RIGHT_IMPACT_X) {
+    float impactSection = (ballImpactY - (rightPadY - BALL_DIAMETER + 1)) * 8 / (PAD_HEIGHT + BALL_DIAMETER);
+    if(impactSection <= 1){
+      *ballDeltaY = - MAX_BALL_Y_SPEED;
+    }
+    else if(impactSection <= 2){
+      *ballDeltaY = - MAX_BALL_Y_SPEED * 3 / 4;
+    }
+    else if(impactSection <= 3){
+      *ballDeltaY = - MAX_BALL_Y_SPEED * 2 / 4;
+    }
+    else if(impactSection <= 4){
+      *ballDeltaY = - MAX_BALL_Y_SPEED / 4;
+    }
+    else if(impactSection <= 5){
+      *ballDeltaY = MAX_BALL_Y_SPEED / 4;
+    }
+    else if(impactSection <= 6){
+      *ballDeltaY = MAX_BALL_Y_SPEED * 2 / 4;
+    }
+    else if(impactSection <= 7){
+      *ballDeltaY = MAX_BALL_Y_SPEED * 3 / 4;
+    }
+    else if(impactSection <= 8){
+      *ballDeltaY = MAX_BALL_Y_SPEED;
+    }
     *ballX = RIGHT_IMPACT_X - (*ballX - RIGHT_IMPACT_X);
-    return - 1;
+    if(*ballDeltaX * 1.05 < 1) {
+      *ballDeltaX *= 1.05;
+    }
+    *ballDeltaX *= - 1.0;
   }
-  return 1;
+  return;
 }
-void resetBall(float* ballX, float* ballY, int BALL_DIAMETER) {
+void resetBall(float* ballX, float* ballY, float* ballDeltaX, int BALL_DIAMETER, float TOP_MARGIN, float BOT_END, float LEFT_MARGIN, float RIGHT_END, float INIT_BALL_SPEED) {
   *ballX = LEFT_MARGIN + (RIGHT_END - BALL_DIAMETER - LEFT_MARGIN) / 2;
-  *ballY = TOP_MARGIN + (BOTTOM_END - BALL_DIAMETER - TOP_MARGIN) / 2;
+  *ballY = TOP_MARGIN + (BOT_END - BALL_DIAMETER - TOP_MARGIN) / 2;
+  *ballDeltaX = INIT_BALL_SPEED;
   return;
 }
-void displayWinner(int leftScore, int rightScore) {
-  if(leftScore == 5) {
-    /*print to screen that the left player won, or do some visual effect*/
+int movePaddle(int padDir, float* topY, float MOVE_DISTANCE, int PAD_HEIGHT, bool** ledArray, float LEFT_X, int PAD_WIDTH, float TOP_MARGIN, float BOT_END) {
+  if(padDir != 1 && padDir != 5) {
+    padDir = 0;
+    return padDir;
   }
-  else {
-    /*print to screen that the right player won, or do some visual effect*/
+  else if(padDir == 1 && (int) (*topY + 0.5) - MOVE_DISTANCE < TOP_MARGIN) {
+    padDir = 0;
+    return padDir;
   }
-  return;
-}
-int movePaddle(int paddleDir, float* topY, float MOVE_DISTANCE, int PADDLE_HEIGHT, bool** ledArray, float LEFT_X, int PADDLE_WIDTH) {
-  if(paddleDir == 1 && *topY + 0.5 - MOVE_DISTANCE < TOP_MARGIN) { /*Assuming: no move == 0, up == 1, right == 2, down == 3, left == 4*/
-    paddleDir = 0;
+  else if(padDir == 5 && (int) (*topY + 0.5) + PAD_HEIGHT - 1 + MOVE_DISTANCE > BOT_END) {
+    padDir = 0;
+    return padDir;
   }
-  else if(paddleDir == 3 && *topY + 0.5 + PADDLE_HEIGHT - 1 + MOVE_DISTANCE > BOTTOM_END) {
-    paddleDir = 0;
-  }
-  drawRectangle(ledArray, false, *topY + 0.5, LEFT_X, PADDLE_HEIGHT, PADDLE_WIDTH);
-  if(paddleDir == 1) {
+  if(padDir == 1 && (int) (*topY) != (int) (*topY - MOVE_DISTANCE)) {
+    drawRectangle(ledArray, false, *topY + 0.5, LEFT_X, PAD_HEIGHT, PAD_WIDTH);
     *topY -= MOVE_DISTANCE;
+    drawRectangle(ledArray, true, *topY + 0.5, LEFT_X, PAD_HEIGHT, PAD_WIDTH);
   }
-  else if(paddleDir == 3) {
+  else if(padDir == 5 && (int) (*topY) != (int) (*topY + MOVE_DISTANCE)) {
+    drawRectangle(ledArray, false, *topY + 0.5, LEFT_X, PAD_HEIGHT, PAD_WIDTH);
     *topY += MOVE_DISTANCE;
+    drawRectangle(ledArray, true, *topY + 0.5, LEFT_X, PAD_HEIGHT, PAD_WIDTH);
   }
-  drawRectangle(ledArray, true, *topY + 0.5, LEFT_X, PADDLE_HEIGHT, PADDLE_WIDTH);
-  return paddleDir;
+  return padDir;
 }
+
 void pong(bool** ledArray) {
-  /*Setting values of the global variables for pong:*/
-  TOP_MARGIN = 6.0;
-  BOTTOM_MARGIN = 6.0;
-  LEFT_MARGIN = 0.0;
-  RIGHT_MARGIN = 0.0;
-  BOTTOM_END = ARRAY_HEIGHT - BOTTOM_MARGIN - 1.0;
-  RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
 
-  /*Pong-specific constants:*/
-  const int BALL_DIAMETER = 1; /*Let this equal the intended diameter minus 1.*/
-  const int PADDLE_HEIGHT = 8;
-  const int PADDLE_WIDTH = 2;
-  const int PADDLE_DISTANCE = 3; /*The distance between each paddle and the edge of the screen.*/
-  const float PADDLE_MOVE_DISTANCE = 1.0;
-  const float LEFT_PADDLE_X = LEFT_MARGIN + PADDLE_DISTANCE; /*Refers to the innermost pixel on the top of the paddle.*/
-  const float RIGHT_PADDLE_X = RIGHT_END - (PADDLE_WIDTH - 1.0) - PADDLE_DISTANCE;
-  const float LEFT_IMPACT_X = LEFT_PADDLE_X + PADDLE_WIDTH;
-  const float RIGHT_IMPACT_X = RIGHT_PADDLE_X - BALL_DIAMETER - 1.0;
+  //Playfield constants:
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
+  const float TOP_MARGIN = 0.0; //The margins bound the area controlled by the game.
+  const float BOT_MARGIN = 0.0;
+  const float LEFT_MARGIN = 0.0;
+  const float RIGHT_MARGIN = 0.0;
+  const float BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
+  const float RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
 
-  /*Pong-specific variables:*/
-  float ballDeltaX = sqrt(0.5);
-  float ballDeltaY = - sqrt(0.5);
+  //Object constants:
+  const int BALL_DIAMETER = 2;
+  const float INIT_BALL_X_SPEED = 0.5;
+  const float MAX_BALL_Y_SPEED = 0.5;
+
+  const int PAD_HEIGHT = 8;
+  const int PAD_WIDTH = 2;
+  const int PAD_DISTANCE = 3; //The distance from each paddle to its side.
+  const float LEFT_PAD_X = LEFT_MARGIN + PAD_DISTANCE; //Refers to the innermost pixel on the top of the paddle.
+  const float RIGHT_PAD_X = RIGHT_END - (PAD_WIDTH - 1.0) - PAD_DISTANCE;
+  const float LEFT_IMPACT_X = LEFT_PAD_X + PAD_WIDTH;
+  const float RIGHT_IMPACT_X = RIGHT_PAD_X - BALL_DIAMETER;
+  const float PAD_MOVE_DISTANCE = 1.0;
+
+  //Object initialization:
+  float ballDeltaX = INIT_BALL_X_SPEED;
+  float ballDeltaY = 0;
   float ballX = LEFT_MARGIN + (RIGHT_END - BALL_DIAMETER - LEFT_MARGIN) / 2;
-  float ballY = TOP_MARGIN + (BOTTOM_END - BALL_DIAMETER - TOP_MARGIN) / 2 - 4.0; /*the last number is to test stationary impacts*/
-  float leftPaddleY = TOP_MARGIN + (BOTTOM_END - BALL_DIAMETER - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2;
-  float rightPaddleY = TOP_MARGIN + (BOTTOM_END - BALL_DIAMETER - TOP_MARGIN) / 2 - PADDLE_HEIGHT / 2;
+  float ballY = TOP_MARGIN + (BOT_END - BALL_DIAMETER - TOP_MARGIN) / 2; /*the last number is to test stationary impacts*/
+  float prevBallX = ballX;
+  float prevBallY = ballY;
+
+  float leftPadY = TOP_MARGIN + (BOT_END + 1 - TOP_MARGIN) / 2 - PAD_HEIGHT / 2;
+  float rightPadY = TOP_MARGIN + (BOT_END + 1 - TOP_MARGIN) / 2 - PAD_HEIGHT / 2;
+  int leftPadDir = 0;
+  int rightPadDir = 0;
+  drawRectangle(ledArray, true, rightPadY + 0.5, RIGHT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+  drawRectangle(ledArray, true, leftPadY + 0.5, LEFT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+
+  //Score initialization
   int leftScore = 0;
   int rightScore = 0;
-  int scoreDelay = 10; /*Deactivates ball movement for a number of cycles after someone scores*/
-  int leftPaddleDir = 0; /**/
-  int rightPaddleDir = 0;
+  int scoreDelay = 10; //Deactivates ball movement for a number of cycles after someone scores
 
-  drawRectangle(ledArray, true, rightPaddleY + 0.5, RIGHT_PADDLE_X, PADDLE_HEIGHT, PADDLE_WIDTH);
-  drawRectangle(ledArray, true, leftPaddleY + 0.5, LEFT_PADDLE_X, PADDLE_HEIGHT, PADDLE_WIDTH);
+  while(1) {
+    frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
 
-  while (1) {
-    printTest(ledArray);
-    //Sleep(25);
-    //system("cls");
-    usleep(50000);
-    system("clear");
+    //Paddle movement:
+    leftPadDir = getLeftInput();
+    leftPadDir = movePaddle(leftPadDir, &leftPadY, PAD_MOVE_DISTANCE, PAD_HEIGHT, ledArray, LEFT_PAD_X, PAD_WIDTH, TOP_MARGIN, BOT_END);
+    rightPadDir = getRightInput();
+    rightPadDir = movePaddle(rightPadDir, &rightPadY, PAD_MOVE_DISTANCE, PAD_HEIGHT, ledArray, RIGHT_PAD_X, PAD_WIDTH, TOP_MARGIN, BOT_END);
 
-    leftPaddleDir = getLeftInput();
-    leftPaddleDir = movePaddle(leftPaddleDir, &leftPaddleY, PADDLE_MOVE_DISTANCE, PADDLE_HEIGHT, ledArray, LEFT_PADDLE_X, PADDLE_WIDTH);
-    rightPaddleDir = getRightInput();
-    rightPaddleDir = movePaddle(rightPaddleDir, &rightPaddleY, PADDLE_MOVE_DISTANCE, PADDLE_HEIGHT, ledArray, RIGHT_PADDLE_X, PADDLE_WIDTH);
-
-    /*Ball movement:*/
+    //Ball movement:
     if (scoreDelay > 0) {
       scoreDelay--;
     }
-    else if(scoreDelay == 0) {
-      drawBall(ledArray, false, ballY + 0.5, ballX + 0.5, BALL_DIAMETER); /*Erase ball from array*/
+    else {
+      drawBall(ledArray, false, prevBallY + 0.5, prevBallX + 0.5, BALL_DIAMETER, LEFT_MARGIN, RIGHT_END);
+      drawBall(ledArray, true, ballY + 0.5, ballX + 0.5, BALL_DIAMETER, LEFT_MARGIN, RIGHT_END);
+      prevBallX = ballX;
+      prevBallY = ballY;
+
       ballY += ballDeltaY;
+      ballDeltaY *= checkWallImpact(&ballY, BALL_DIAMETER, TOP_MARGIN, BOT_END);
+
       ballX += ballDeltaX;
-      ballDeltaY *= checkWallImpact(&ballY, BALL_DIAMETER);
-      if(ballX <= LEFT_IMPACT_X) { /*The ball has pierced the plane of left_paddle*/
-        ballDeltaX *= checkLeftImpact(ballY, &ballX, LEFT_IMPACT_X, ballDeltaY, ballDeltaX, BALL_DIAMETER, leftPaddleY, PADDLE_HEIGHT);
-        /*Check if the ball hit the edge of the paddle (not yet done) (non-critical functionality)*/
-        /*Checking if the ball hit the left edge of the screen:*/
+      if(ballX <= LEFT_IMPACT_X) { //A paddle collision or score is possible
+        drawRectangle(ledArray, true, leftPadY + 0.5, LEFT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+        checkLeftImpact(ballY, &ballX, LEFT_IMPACT_X, &ballDeltaY, &ballDeltaX, BALL_DIAMETER, leftPadY, PAD_HEIGHT, MAX_BALL_Y_SPEED);
+
+        //Check if the ball hit the edge of the paddle (not yet done) (non-critical functionality)
+
+        //Checking if the ball hit the left edge of the screen:
         if(ballX + BALL_DIAMETER < LEFT_MARGIN) {
-          leftScore++; /*Also change displayed score*/
-          if(leftScore == 3) {
-            break; /*Goes to displayWinner()*/
-          }
-          resetBall(&ballX, &ballY, BALL_DIAMETER);
-          scoreDelay = 10;
-        }
-      }
-      else if(ballX >= RIGHT_IMPACT_X) { /*The ball has pierced the plane of right_paddle*/
-        ballDeltaX *= checkRightImpact(ballY, &ballX, RIGHT_IMPACT_X, ballDeltaY, ballDeltaX, BALL_DIAMETER, rightPaddleY, PADDLE_HEIGHT);
-
-        /*Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)*/
-
-        /*Checking if the ball hit the left edge of the screen:*/
-        if(ballX > RIGHT_END) {
-          rightScore++; /*Also change displayed score*/
+          drawBall(ledArray, false, prevBallY + 0.5, prevBallX + 0.5, BALL_DIAMETER, LEFT_MARGIN, RIGHT_END);
+          rightScore++; //Also change displayed score, if it exists.
           if(rightScore == 3) {
-            break; /*Goes to display_winner()*/
+            drawRectangle(ledArray, false, rightPadY + 0.5, RIGHT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+            drawRectangle(ledArray, false, leftPadY + 0.5, LEFT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+            printWinner(1);
+            break;
           }
-          resetBall(&ballX, &ballY, BALL_DIAMETER);
+          resetBall(&ballX, &ballY, &ballDeltaX, BALL_DIAMETER, TOP_MARGIN, BOT_END, LEFT_MARGIN, RIGHT_END, INIT_BALL_X_SPEED);
           scoreDelay = 10;
         }
       }
-      drawBall(ledArray, true, ballY + 0.5, ballX + 0.5, BALL_DIAMETER); /*Draw ball to array*/
+      else if(ballX > RIGHT_IMPACT_X) { //A paddle collision or score is possible
+        drawRectangle(ledArray, true, rightPadY + 0.5, RIGHT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+        checkRightImpact(ballY, &ballX, RIGHT_IMPACT_X, &ballDeltaY, &ballDeltaX, BALL_DIAMETER, rightPadY, PAD_HEIGHT, MAX_BALL_Y_SPEED);
+
+        //Checking if the ball hit the edge of the paddle: (not yet done) (non-critical functionality)
+
+        //Checking if the ball hit the right edge of the screen:
+        if(ballX > RIGHT_END) {
+          drawBall(ledArray, false, prevBallY + 0.5, prevBallX + 0.5, BALL_DIAMETER, LEFT_MARGIN, RIGHT_END);
+          leftScore++; //Also change displayed score, if it exists.
+          if(leftScore == 3) {
+            drawRectangle(ledArray, false, rightPadY + 0.5, RIGHT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+            drawRectangle(ledArray, false, leftPadY + 0.5, LEFT_PAD_X, PAD_HEIGHT, PAD_WIDTH);
+            printWinner(2);
+            break;
+          }
+          resetBall(&ballX, &ballY, &ballDeltaX, BALL_DIAMETER, TOP_MARGIN, BOT_END, LEFT_MARGIN, RIGHT_END, INIT_BALL_X_SPEED);
+          scoreDelay = 10;
+        }
+      }
     }
   }
-  displayWinner(leftScore, rightScore);
+  return;
 }
 
 int main (void) {
+  //This function's contents are throwaway. They mimic a lodev menu.
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
   bool** ledArray;
-  ledArray = makeArray(ARRAY_HEIGHT, ARRAY_WIDTH);
-  fillArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
-
-  /*Here we will assign the lodev display function to the array and decorate it*/
-
-  int input = 0;
-  do {
-    printf("Enter \"1\" to play pong!");
-    scanf("%d", &input);
-  } while(input != 1);
-  if(input == 1) {
-    pong(ledArray);
-  }
-
-  freeArray(ledArray);
+  ledArray = make2DArray(ARRAY_HEIGHT, ARRAY_WIDTH);
+  fill2DArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
+  pong(ledArray);
+  free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
 }
