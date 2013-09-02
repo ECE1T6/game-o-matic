@@ -1,0 +1,903 @@
+#include <stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
+//#include <tetrominoes.h>
+//Windows: (for testing only)
+//#include <windows.h>
+//#include <conio.h>
+//Linux:
+#include <unistd.h>
+
+//Tetris pieces: (to be stored in tetrominoes.h later)
+const bool allTetrominoes[7][8][8] = {
+{
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1},//I
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{1,1,0,0,0,0,0,0},
+{1,1,0,0,0,0,0,0},
+{1,1,1,1,1,1,0,0},
+{1,1,1,1,1,1,0,0},//J
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{0,0,0,0,1,1,0,0},
+{0,0,0,0,1,1,0,0},
+{1,1,1,1,1,1,0,0},
+{1,1,1,1,1,1,0,0},//L
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},//O
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{1,1,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0},//S
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{0,0,1,1,0,0,0,0},
+{0,0,1,1,0,0,0,0},
+{1,1,1,1,1,1,0,0},
+{1,1,1,1,1,1,0,0},//T
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+,{
+{1,1,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},//Z
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0}}
+};
+
+//Game-agnostic functions (require lodev support):
+int getLeftInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()){
+    int input = getch();
+    if(input == 'w') {
+      return 1;
+    }
+    else if(input == 'd') {
+      return 3;
+    }
+    else if(input == 's') {
+      return 5;
+    }
+    else if(input == 'a') {
+      return 7;
+    }
+    else if(input == 'e') {
+      return 9;
+    }
+    else if(input == 'q') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+int getRightInput(void) { //This is a placeholder for a lodev function
+/*
+  if(kbhit()) {
+    int input = getch();
+    if(input == 'i') {
+      return 1;
+    }
+    else if(input == 'l') {
+      return 3;
+    }
+    else if(input == 'k') {
+      return 5;
+    }
+    else if(input == 'j') {
+      return 7;
+    }
+    else if(input == 'o') {
+      return 9;
+    }
+    else if(input == 'u') {
+      return 10;
+    }
+  }
+*/
+  return 0;
+}
+void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int HEIGHT, int WIDTH) {
+  int i, j;
+  for(j = HEIGHT - 1; j >= 0; j--) {
+    for(i = WIDTH - 1; i >= 0; i--) {
+      ledArray[topY + j][leftX + i] = lightsOn;
+    }
+  }
+  return;
+}
+
+//Test functions (remove in final version):
+void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  int i, j;
+  for(i = TOP_MARGIN; i <= BOT_END; i++) {
+    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
+      if(ledArray[i][j] == true) {
+        printf("O", ledArray[i][j]);
+      }
+      else {
+        printf("*", ledArray[i][j]);
+      }
+    }
+    printf("\n");
+  }
+  return;
+}
+void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+  //Windows:
+  //Sleep(5);
+  system("cls");
+  //Linux:
+  //usleep(50000);
+  //system("clear");
+
+  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+  return;
+}
+
+//Tetris-specific functions:
+bool** make2DArray(float HEIGHT, float WIDTH) {
+  int i;
+  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
+  for (i = 0; i < HEIGHT; i++) {
+    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
+  }
+  return ledArray;
+}
+void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
+  int i, j;
+  for(i = 0; i < HEIGHT; i++) {
+    for(j = 0; j < WIDTH; j++) {
+      ledArray[i][j] = lightsOn;
+    }
+  }
+  return;
+}
+void free2DArray(bool** ledArray, int HEIGHT) {
+  int i;
+  for (i = 0; i < HEIGHT; i++) {
+    free(ledArray[i]);
+  }
+  free(ledArray);
+  return;
+}
+int* make1DArray(int LENGTH) {
+  int* longArray = (int*) malloc(LENGTH*sizeof(int));
+  int i;
+  for(i = 0; i < LENGTH; i++) {
+    longArray[i] = -1;
+  }
+  return longArray;
+}
+void drawCheckerboard(bool** ledArray, int topY, int leftX, int HEIGHT, int WIDTH) {
+  //The bottom right pixel is always made true.
+  int i, j;
+  for(j = HEIGHT - 1; j >= 0; j--) {
+    for(i = WIDTH - 1; i >= 0; i--) {
+      if((j + i) % 2 == 0) {
+        ledArray[topY + j][leftX + i] = true;
+      }
+      else {
+        ledArray[topY + j][leftX + i] = false;
+      }
+    }
+  }
+  return;
+}
+void fillBag(int* doubleBag, bool firstFill) {
+  //Fills "bag" with semi-random tetromino types.
+  //Each type is places at most once on each half of the bag.
+  int i, j;
+  srand(time(NULL));
+  if(firstFill == true) {
+    for(i = 0; i < 7; i++) {
+      do {
+        doubleBag[i] = rand()%7;
+        for(j = 0; j < i; j++) {
+          if(doubleBag[i] == doubleBag[j]) {
+            break;
+          }
+        }
+      } while(i != j);
+    }
+  }
+  for(i = 7; i < 14; i++) {
+    do {
+      doubleBag[i] = rand()%7;
+      for(j = 7; j < i; j++) {
+        if(doubleBag[i] == doubleBag[j]) {
+          break;
+        }
+      }
+    } while(i != j);
+  }
+  return;
+}
+void shiftBag(int* doubleBag) {
+  int i;
+  for(i = 0; i < 13; i++) {
+    doubleBag[i] = doubleBag[i + 1];
+  }
+  doubleBag[i] = -1;
+  return;
+}
+int removeFromBag(int* doubleBag) {
+  //Returns the first piece from the "bag" array. It also shifts and, if necessary, refills the bag.
+  int i = doubleBag[0];
+  shiftBag(doubleBag);
+  if(doubleBag[7] == -1){
+    fillBag(doubleBag, false);
+  }
+  return i;
+}
+void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH, int player) {
+  //Copies a piece from tetromino.h to the curPiece array, with a specified orientation.
+  int i, j;
+  if(curType == 3 && player == 1) {
+    pieceOrien = 2; //Rotation for "O" is purposely broken for efficiency and conformation.
+  }
+  else if(curType == 3 && player == 2) {
+    pieceOrien = 4;
+  }
+  if(curType != 0) {
+    if(player == 1) {
+      drawRectangle(curPiece, false, 0, PIECE_WIDTH * 0.75, PIECE_WIDTH, PIECE_WIDTH / 4);
+      drawRectangle(curPiece, false, PIECE_WIDTH * 0.75, 0, PIECE_WIDTH / 4, PIECE_WIDTH * 3 / 4);
+      PIECE_WIDTH *= 0.75; //Moves the pivot for rotation.
+    }
+    else{
+      drawRectangle(curPiece, false, 0, PIECE_WIDTH * 0.75, PIECE_WIDTH, PIECE_WIDTH / 4);
+      drawRectangle(curPiece, false, PIECE_WIDTH * 0.75, 0, PIECE_WIDTH / 4, PIECE_WIDTH * 3 / 4);
+      PIECE_WIDTH *= 0.75; //Moves the pivot for rotation.
+    }
+  }
+  if(pieceOrien == 1) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+        curPiece[j][i] = allTetrominoes[curType][j][i];
+      }
+    }
+  }
+  else if (pieceOrien == 2) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+        curPiece[j][i] = allTetrominoes[curType][PIECE_WIDTH - 1 - i][j];
+      }
+    }
+  }
+  else if (pieceOrien == 3) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+        curPiece[j][i] = allTetrominoes[curType][PIECE_WIDTH - 1 - j][PIECE_WIDTH - 1 - i];
+      }
+    }
+  }
+  else if (pieceOrien == 4) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+        curPiece[j][i] = allTetrominoes[curType][i][PIECE_WIDTH - 1 - j];
+      }
+    }
+  }
+  if(player == 2 && curType != 0) {
+    for(j = 7; j >= 2; j--) {
+      for(i = 5; i >= 0; i--) {
+        curPiece[j][i] = curPiece[j - 2][i];
+      }
+    }
+    for(j = 1; j >= 0; j--) {
+      for(i = 5; i >= 0; i--) {
+        curPiece[j][i] = false;
+      }
+    }
+  }
+  return;
+}
+void copyPiece(bool** destPiece, bool** sourcePiece, int PIECE_WIDTH) {
+  int i, j;
+  for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+    for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+      destPiece[j][i] = sourcePiece[j][i];
+    }
+  }
+  return;
+}
+void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
+  int i, j;
+  for(j = PIECE_WIDTH - 1; j >= 0; j--) {
+    for(i = PIECE_WIDTH - 1; i >= 0; i--) {
+      if(curPiece[j][i] == true) {
+        ledArray[curY + j][curX + i] = lightsOn;
+      }
+    }
+  }
+  return;
+}
+void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH, int player) {
+  //Draws the current piece with a semi-solid, checkerboard pattern.
+  int i, j;
+  int SQUARE_WIDTH = PIECE_WIDTH / 4;
+  if(player == 1) {
+    for(j = PIECE_WIDTH - 1; j >= 0; j -= SQUARE_WIDTH) {
+      for(i = 0; i < PIECE_WIDTH; i += SQUARE_WIDTH) {
+        if(curPiece[j][i] == true) {
+          ledArray[curY + j][curX + i] = lightsOn;
+        }
+      }
+    }
+  }
+  else {
+    for(j = 0; j < PIECE_WIDTH; j += SQUARE_WIDTH) {
+      for(i = PIECE_WIDTH - 1; i >= 0; i -= SQUARE_WIDTH) {
+        if(curPiece[j][i] == true) {
+          ledArray[curY + j][curX + i] = lightsOn;
+        }
+      }
+    }
+  }
+  return;
+}
+int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, bool spawn) {
+  //Returns 1 if projPiece would overlap an object.
+  //Ignores the projected piece colliding with the current piece when a shift is attempted.
+  int i, j;
+  for(j = 0; j < PIECE_WIDTH; j += SQUARE_WIDTH) {
+    for(i = 0; i < PIECE_WIDTH; i += SQUARE_WIDTH) {
+      if(projPiece[j][i] == true && ledArray[projY + j][projX + i] == true) {
+        if(spawn == false
+           && i + projX - curX < PIECE_WIDTH
+           && i + projX - curX >= 0
+           && j + projY - curY < PIECE_WIDTH
+           && j + projY - curY >= 0
+           && curPiece[j + projY - curY][i + projX - curX] == true) {
+            continue;
+        }
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, int player) {
+  //Checks for complete lines and clears them. Returns the number of lines cleared.
+  int i, j, a, b, linesCleared = 0;
+  bool fullLine;
+  if(player == 1){
+    for(i = curX + PIECE_WIDTH - 1; i >= leftBound && i >= curX; i -= SQUARE_WIDTH) {
+      fullLine = true;
+      for(j = topBound; j <= botBound; j += SQUARE_WIDTH) {
+        if(ledArray[j][i] == false) {
+          fullLine = false;
+          break;
+        }
+      }
+      if(fullLine == true) {
+        for(a =  i - SQUARE_WIDTH + 1; a <= rightBound - SQUARE_WIDTH; a++) {
+          for(b = topBound; b <= botBound; b++) {
+            ledArray[b][a] = ledArray[b][a + SQUARE_WIDTH];
+          }
+        }
+        for(a = rightBound - SQUARE_WIDTH + 1; a <= rightBound; a++) {
+          for(b = topBound; b <= botBound; b++) {
+            ledArray[b][a] = false;
+          }
+        }
+        linesCleared++;
+      }
+    }
+  }
+  else{
+    for(i = curX + SQUARE_WIDTH - 1; i <= rightBound && i <= curX + PIECE_WIDTH - 1; i += SQUARE_WIDTH) {
+      fullLine = true;
+      for(j = topBound; j <= botBound; j += SQUARE_WIDTH) {
+        if(ledArray[j][i] == false) {
+          fullLine = false;
+          break;
+        }
+      }
+      if(fullLine == true) {
+        for(a =  i; a >= leftBound + SQUARE_WIDTH; a--) {
+          for(b = topBound; b <= botBound; b++) {
+            ledArray[b][a] = ledArray[b][a - SQUARE_WIDTH];
+          }
+        }
+        for(a = leftBound + SQUARE_WIDTH - 1; a >= leftBound; a--) {
+          for(b = topBound; b <= botBound; b++) {
+            ledArray[b][a] = false;
+          }
+        }
+        linesCleared++;
+      }
+    }
+  }
+  return linesCleared;
+}
+int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int SQUARE_WIDTH, int player) {
+  //Adds an unclearable, semi-solid line of blocks to the bottom of the play area.
+  //Returns 1 if this would end the game with a "top out".
+  int i, j;
+  bool topOut = false;
+  if(player == 1) {
+    i = rightBound;
+    for(j = topBound; j <= botBound; j += SQUARE_WIDTH) {
+      if(ledArray[j][i]) {
+        topOut = true;
+        break;
+      }
+    }
+    for(i = rightBound - SQUARE_WIDTH; i >= leftBound; i--) {
+      for(j = topBound; j <= botBound; j++) {
+        ledArray[j][i + SQUARE_WIDTH] = ledArray[j][i];
+      }
+    }
+    drawCheckerboard(ledArray, topBound, leftBound, botBound + 1 - topBound, SQUARE_WIDTH);
+    if(topOut == true) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    i = leftBound;
+    for(j = topBound; j <= botBound; j += SQUARE_WIDTH) {
+      if(ledArray[j][i]) {
+        topOut = true;
+        break;
+      }
+    }
+    for(i = leftBound + SQUARE_WIDTH; i <= rightBound; i++) {
+      for(j = topBound; j <= botBound; j++) {
+        ledArray[j][i - SQUARE_WIDTH] = ledArray[j][i];
+      }
+    }
+    drawCheckerboard(ledArray, topBound, rightBound + 1 - SQUARE_WIDTH, botBound + 1 - topBound, SQUARE_WIDTH);
+    if(topOut == true) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+}
+
+void tetris(bool** ledArray) {
+
+  //Playfield constants:
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
+
+  const float TOP_MARGIN = 0.0; //The margins bound the area controlled by the game.
+  const float BOT_MARGIN = 0.0;
+  const float LEFT_MARGIN = 0.0;
+  const float RIGHT_MARGIN = 0.0;
+  const float BOT_END = ARRAY_HEIGHT - BOT_MARGIN - 1.0;
+  const float RIGHT_END = ARRAY_WIDTH - RIGHT_MARGIN - 1.0;
+
+  const int PIECE_WIDTH = 8; //Must be evenly divisible by 4
+  const int SQUARE_WIDTH = PIECE_WIDTH / 4;
+
+  //Playfield 1:
+  const int LEFT_BORDER = 2; //Should be a multiple of SQUARE_WIDTH
+  const int RIGHT_BORDER = 38;
+  const int TOP_BORDER = 2;
+  const int BOT_BORDER = 16;
+
+  //Playfield 2:
+  const int LEFT_BORDER_2 = 38; //Should be a multiple of SQUARE_WIDTH
+  const int RIGHT_BORDER_2 = 2;
+  const int TOP_BORDER_2 = 16;
+  const int BOT_BORDER_2 = 2;
+
+  //"Bags" of upcoming piece types: ("double" indicating two sets of types each)
+  int* doubleBag = make1DArray(14);
+  fillBag(doubleBag, true);
+  int* doubleBag2 = make1DArray(14);
+  fillBag(doubleBag2, true);
+
+  //Object constants:
+  const int INIT_X = RIGHT_END + 1 - RIGHT_BORDER - SQUARE_WIDTH * 4;
+  const int INIT_Y = TOP_BORDER + (BOT_END + 1 - BOT_BORDER - TOP_BORDER) / 2 - SQUARE_WIDTH * 2;
+  const int INIT_X_2 = LEFT_MARGIN + LEFT_BORDER_2 + SQUARE_WIDTH;
+  const int INIT_Y_2 = TOP_BORDER_2 + (BOT_END + 1 - BOT_BORDER_2 - TOP_BORDER_2) / 2 - SQUARE_WIDTH * 2;
+
+  //Object variables:
+  float curX = INIT_X;
+  float curY = INIT_Y;
+  float projX = curX;
+  float projY = curY;
+  float shadX = curX;
+  int curType = removeFromBag(doubleBag);
+  int pieceOrien = 2; //1-4 corresponds to north, east, south, west
+  int input = 0;
+  int timer = 1;
+  int linesCleared = 0;
+  int garbageLines = 0;
+
+  float curX2 = INIT_X_2;
+  float curY2 = INIT_Y_2;
+  float projX2 = curX2;
+  float projY2 = curY2;
+  float shadX2 = curX2;
+  int curType2 = removeFromBag(doubleBag2);
+  int pieceOrien2 = 4; //1-4 corresponds to north, east, south, west
+  int input2 = 0;
+  int timer2 = 1;
+  int linesCleared2 = 0;
+  int garbageLines2 = 0;
+
+  int dropTime = 10; //Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness
+
+  //Checkboard borders:
+  drawCheckerboard(ledArray, 0, 0, BOT_END + 1 - TOP_MARGIN, RIGHT_END + 1 - LEFT_MARGIN);
+  drawRectangle(ledArray, false, TOP_BORDER, LEFT_BORDER, BOT_END + 1 - BOT_BORDER - TOP_BORDER, RIGHT_END + 1 - RIGHT_BORDER - LEFT_BORDER);
+  drawRectangle(ledArray, false, TOP_BORDER_2, LEFT_BORDER_2, BOT_END + 1 - BOT_BORDER_2 - TOP_BORDER_2, RIGHT_END + 1 - RIGHT_BORDER_2 - LEFT_BORDER_2);
+
+  //Current state and projected state of pieces:
+  bool** curPiece = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
+  importPiece(curPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+  bool** projPiece = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
+  copyPiece(projPiece, curPiece, PIECE_WIDTH);
+  while(checkOverlap(ledArray, projPiece, curPiece, curY, shadX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+    shadX -= SQUARE_WIDTH;
+  }
+  bool** curPiece2 = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
+  importPiece(curPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+  bool** projPiece2 = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
+  copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
+  while(checkOverlap(ledArray, projPiece2, curPiece2, curY2, shadX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+    shadX2 += SQUARE_WIDTH;
+  }
+
+  while(1) {
+
+    //Redrawing for player 1:
+    drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH);
+    drawShadow(ledArray, curPiece, curType, false, curY, shadX, PIECE_WIDTH, 1);
+    drawPiece(ledArray, projPiece, curType, true, projY, projX, PIECE_WIDTH);
+    copyPiece(curPiece, projPiece, PIECE_WIDTH);
+    curX = projX;
+    curY = projY;
+    shadX = curX;
+    while(checkOverlap(ledArray, projPiece, curPiece, curY, shadX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+      shadX -= SQUARE_WIDTH;
+    }
+    drawShadow(ledArray, curPiece, curType, true, curY, shadX, PIECE_WIDTH, 1);
+
+    //Redrawing for player 2:
+    drawPiece(ledArray, curPiece2, curType2, false, curY2, curX2, PIECE_WIDTH);
+    drawShadow(ledArray, curPiece2, curType2, false, curY2, shadX2, PIECE_WIDTH, 2);
+    drawPiece(ledArray, projPiece2, curType2, true, projY2, projX2, PIECE_WIDTH);
+    copyPiece(curPiece2, projPiece2, PIECE_WIDTH);
+    curX2 = projX2;
+    curY2 = projY2;
+    shadX2 = curX2;
+    while(checkOverlap(ledArray, projPiece2, curPiece2, curY2, shadX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+      shadX2 += SQUARE_WIDTH;
+    }
+    drawShadow(ledArray, curPiece2, curType2, true, curY2, shadX2, PIECE_WIDTH, 2);
+
+    frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+
+    input = getLeftInput();
+    if (input == 1) { /*Hard drop*/
+      while(checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projX -= SQUARE_WIDTH;
+        drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH);
+        copyPiece(curPiece, projPiece, PIECE_WIDTH);
+        curX = projX;
+        curY = projY;
+        drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
+        frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+      }
+      linesCleared += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, curX, PIECE_WIDTH, SQUARE_WIDTH, 1);
+      while(linesCleared2 > 3){
+        linesCleared2 -= 4;
+        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+          break;
+        }
+        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+          break;
+        }
+      }
+      projX = INIT_X;
+      projY = INIT_Y;
+      curX = projX;
+      curY = projY;
+      shadX = curX;
+      curType = removeFromBag(doubleBag);
+      pieceOrien = 2;
+      timer = 1;
+      importPiece(curPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+      copyPiece(projPiece, curPiece, PIECE_WIDTH);
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, true)) {
+        break; /*Game loss*/
+      }
+    }
+    else if(input == 5 || timer++ % dropTime == 0) { /*Soft drop*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        linesCleared += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, curX, PIECE_WIDTH, SQUARE_WIDTH, 1);
+        while(linesCleared2 > 3){
+          linesCleared2 -= 4;
+          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+            break;
+          }
+          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+            break;
+          }
+        }
+        projX = INIT_X;
+        projY = INIT_Y;
+        curX = projX;
+        curY = projY;
+        shadX = curX;
+        curType = removeFromBag(doubleBag);
+        pieceOrien = 2;
+        timer = 1;
+        importPiece(curPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+        copyPiece(projPiece, curPiece, PIECE_WIDTH);
+        if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, true)) {
+          break; /*Game loss*/
+        }
+      }
+      else {
+        projX -= SQUARE_WIDTH;
+        timer = 1;
+      }
+    }
+    else if(input == 9) { /*Spin clockwise*/
+      pieceOrien++;
+      if(pieceOrien > 4) {
+        pieceOrien -= 4;
+      }
+      importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY + 2 * SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY - SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY - 2 * SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien--;
+          if(pieceOrien < 1) {
+            pieceOrien += 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+        }
+      }
+    }
+    else if(input == 10) { /*Spin counterclockwise*/
+      pieceOrien--;
+      if(pieceOrien < 1) {
+        pieceOrien += 4;
+      }
+      importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+      if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY += SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY + 2 * SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY += 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece, curPiece, projY - SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY -= SQUARE_WIDTH;
+        }
+        else if(curType == 0 && !checkOverlap(ledArray, projPiece, curPiece, projY - 2 * SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY -= 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien++;
+          if(pieceOrien > 4) {
+            pieceOrien -= 4;
+          }
+          importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
+        }
+      }
+    }
+    else if(input == 3) { /*Move right*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projY += SQUARE_WIDTH;
+      }
+    }
+    else if(input == 7) { /*Move left*/
+      if(checkOverlap(ledArray, projPiece, curPiece, projY - SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projY -= SQUARE_WIDTH;
+      }
+    }
+
+    input2 = getRightInput();
+    if (input2 == 1) { /*Hard drop*/
+      while(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projX2 += SQUARE_WIDTH;
+        drawPiece(ledArray, curPiece2, curType2, false, curY2, curX2, PIECE_WIDTH);
+        copyPiece(curPiece2, projPiece2, PIECE_WIDTH);
+        curX2 = projX2;
+        curY2 = projY2;
+        drawPiece(ledArray, curPiece2, curType2, true, curY2, curX2, PIECE_WIDTH);
+        frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+      }
+      linesCleared2 += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, curX2, PIECE_WIDTH, SQUARE_WIDTH, 2);
+      while(linesCleared > 3){
+        linesCleared -= 4;
+        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+          break;
+        }
+        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+          break;
+        }
+      }
+      projX2 = INIT_X_2;
+      projY2 = INIT_Y_2;
+      curX2 = projX2;
+      curY2 = projY2;
+      shadX2 = curX2;
+      curType2 = removeFromBag(doubleBag2);
+      pieceOrien2 = 4;
+      timer2 = 1;
+      importPiece(curPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+      copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, true)) {
+        break; /*Game loss*/
+      }
+    }
+    else if(input2 == 5 || timer2++ % dropTime == 0) { /*Soft drop*/
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        linesCleared2 += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, curX2, PIECE_WIDTH, SQUARE_WIDTH, 2);
+        while(linesCleared > 3){
+          linesCleared -= 4;
+          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+            break;
+          }
+          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+            break;
+          }
+        }
+        projX2 = INIT_X_2;
+        projY2 = INIT_Y_2;
+        curX2 = projX2;
+        curY2 = projY2;
+        shadX2 = curX2;
+        curType2 = removeFromBag(doubleBag2);
+        pieceOrien2 = 4;
+        timer2 = 1;
+        importPiece(curPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+        copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
+        if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, true)) {
+          break; /*Game loss*/
+        }
+      }
+      else {
+        projX2 += SQUARE_WIDTH;
+        timer2 = 1;
+      }
+    }
+    else if(input2 == 9) { /*Spin clockwise*/
+      pieceOrien2++;
+      if(pieceOrien2 > 4) {
+        pieceOrien2 -= 4;
+      }
+      importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 - SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 -= SQUARE_WIDTH;
+        }
+        else if(curType2 == 0 && !checkOverlap(ledArray, projPiece2, curPiece2, projY2 - 2 * SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 -= 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 + SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 += SQUARE_WIDTH;
+        }
+        else if(curType2 == 0 && !checkOverlap(ledArray, projPiece2, curPiece2, projY2 + 2 * SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 += 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien2--;
+          if(pieceOrien2 < 1) {
+            pieceOrien2 += 4;
+          }
+          importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+        }
+      }
+    }
+    else if(input2 == 10) { /*Spin counterclockwise*/
+      pieceOrien2--;
+      if(pieceOrien2 < 1) {
+        pieceOrien2 += 4;
+      }
+      importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+        if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 - SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 -= SQUARE_WIDTH;
+        }
+        else if(curType2 == 0 && !checkOverlap(ledArray, projPiece2, curPiece2, projY2 - 2 * SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 -= 2 * SQUARE_WIDTH;
+        }
+        else if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 + SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 += SQUARE_WIDTH;
+        }
+        else if(curType2 == 0 && !checkOverlap(ledArray, projPiece2, curPiece2, projY2 + 2 * SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false)) {
+          projY2 += 2 * SQUARE_WIDTH;
+        }
+        else {
+          pieceOrien2++;
+          if(pieceOrien2 > 4) {
+            pieceOrien2 -= 4;
+          }
+          importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
+        }
+      }
+    }
+    else if(input2 == 3) { /*Move right*/
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2 - SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projY2 -= SQUARE_WIDTH;
+      }
+    }
+    else if(input2 == 7) { /*Move left*/
+      if(checkOverlap(ledArray, projPiece2, curPiece2, projY2 + SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
+        projY2 += SQUARE_WIDTH;
+      }
+    }
+  }
+  drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
+  drawPiece(ledArray, curPiece2, curType2, true, curY2, curX2, PIECE_WIDTH);
+  frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+  free(doubleBag);
+  free2DArray(curPiece, PIECE_WIDTH);
+  free2DArray(projPiece, PIECE_WIDTH);
+  free(doubleBag2);
+  free2DArray(curPiece2, PIECE_WIDTH);
+  free2DArray(projPiece2, PIECE_WIDTH);
+  return;
+}
+
+int main (void) {
+  //This function's contents are throwaway. They mimic a lodev menu.
+  const float ARRAY_HEIGHT = 38.0;
+  const float ARRAY_WIDTH = 76.0;
+  bool** ledArray;
+  ledArray = make2DArray(ARRAY_HEIGHT, ARRAY_WIDTH);
+  fill2DArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
+  tetris(ledArray);
+  free2DArray(ledArray, ARRAY_HEIGHT);
+  return 0;
+}
