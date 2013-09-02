@@ -20,6 +20,6 @@ int main (void){
 	usleep(1000000);
 	pthread_cancel(tid);
 	armmips *= 0.00001;
-	printf("Armmips: %llu\n", armmips); //uncomment to print results to terminal.
+	//printf("mips: %llu\n", armmips); //uncomment to print results to terminal.
 	return (int) armmips;
 }
