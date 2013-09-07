@@ -174,7 +174,7 @@ void printTest(bool** ledArray, float topMargin, float leftMargin, float botEnd,
   int i, j;
   for(i = topMargin; i <= botEnd; i++) {
     for(j = leftMargin; j <= rightEnd; j++) {
-      if(ledArray[i][j] == true) {
+      if(ledArray[i][j]) {
         printf("O", ledArray[i][j]);
       }
       else {
@@ -372,7 +372,7 @@ void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int
   }
   for(j = pieceWidth - 1 - firstGap; j >= secondGap; j--) {
     for(i = pieceWidth - 1 - secondGap; i >= firstGap; i--) {
-      if(curPiece[j][i] == true) {
+      if(curPiece[j][i]) {
         ledArray[curY + j][curX + i] = lightsOn;
       }
     }
@@ -395,7 +395,7 @@ void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, in
   if(player == 1) {
     for(j = pieceWidth - 1; j >= 0; j -= squareWidth) {
       for(i = 0; i < pieceWidth; i += squareWidth) {
-        if(curPiece[j][i] == true) {
+        if(curPiece[j][i]) {
           ledArray[curY + j][curX + i] = lightsOn;
         }
       }
@@ -404,7 +404,7 @@ void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, in
   else {
     for(j = 0; j < pieceWidth; j += squareWidth) {
       for(i = pieceWidth - 1; i >= 0; i -= squareWidth) {
-        if(curPiece[j][i] == true) {
+        if(curPiece[j][i]) {
           ledArray[curY + j][curX + i] = lightsOn;
         }
       }
@@ -418,16 +418,21 @@ int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, 
   int i, j, squareWidth = pieceWidth / 4;
   for(j = 0; j < pieceWidth; j += squareWidth) {
     for(i = 0; i < pieceWidth; i += squareWidth) {
-      if(projPiece[j][i] == true && ledArray[projY + j][projX + i] == true) {
-        if(spawning == false
-           && i + projX - curX < pieceWidth
-           && i + projX - curX >= 0
-           && j + projY - curY < pieceWidth
-           && j + projY - curY >= 0
-           && curPiece[j + projY - curY][i + projX - curX] == true) {
-            continue;
+      if(projPiece[j][i]) {
+        if(projY + j < 0 || projX + i < 0 || projX + i >= 76) { //Exception for an I piece rotating at the edge of player 1's field
+          return 1;
         }
-        return 1;
+        else if(ledArray[projY + j][projX + i]) {
+          if(!spawning
+             && i + projX - curX < pieceWidth
+             && i + projX - curX >= 0
+             && j + projY - curY < pieceWidth
+             && j + projY - curY >= 0
+             && curPiece[j + projY - curY][i + projX - curX]) {
+              continue;
+          }
+          return 1;
+        }
       }
     }
   }
@@ -441,12 +446,12 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
     for(i = curX + pieceWidth - 1; i >= leftBound && i >= curX; i -= squareWidth) {
       fullLine = true;
       for(j = topBound; j <= botBound; j += squareWidth) {
-        if(ledArray[j][i] == false) {
+        if(!ledArray[j][i]) {
           fullLine = false;
           break;
         }
       }
-      if(fullLine == true) {
+      if(fullLine) {
         for(a =  i - squareWidth + 1; a <= rightBound - squareWidth; a++) {
           for(b = topBound; b <= botBound; b++) {
             ledArray[b][a] = ledArray[b][a + squareWidth];
@@ -465,12 +470,12 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
     for(i = curX + squareWidth - 1; i <= rightBound && i <= curX + pieceWidth - 1; i += squareWidth) {
       fullLine = true;
       for(j = topBound; j <= botBound; j += squareWidth) {
-        if(ledArray[j][i] == false) {
+        if(!ledArray[j][i]) {
           fullLine = false;
           break;
         }
       }
-      if(fullLine == true) {
+      if(fullLine) {
         for(a =  i; a >= leftBound + squareWidth; a--) {
           for(b = topBound; b <= botBound; b++) {
             ledArray[b][a] = ledArray[b][a - squareWidth];
@@ -570,13 +575,13 @@ void tetrisTwoPlayer(bool** ledArray) {
 
   srand(time(NULL));
 
-  int dropTime = 10; //Decreasing reduces responsiveness but increases speed/difficulty without processor cost. Should be > 1
+  int dropTime = 15; //Decreasing reduces responsiveness but increases speed/difficulty without processor cost. Should be > 1
 
   //Drawing checkboard border base to the large array:
   drawCheckerboard(ledArray, 0, 0, botEnd + 1 - topMargin, rightEnd + 1 - leftMargin);
 
   //Player 1: Playfield constraints:
-  const int leftBorder = 2; //Should be a multiple of squareWidth
+  const int leftBorder = 0; //Should be a multiple of squareWidth
   const int rightBorder = 38;
   const int topBorder = 2;
   const int botBorder = 16;
@@ -647,7 +652,7 @@ void tetrisTwoPlayer(bool** ledArray) {
 
   //Player 2: Playfield constraints:
   const int leftBorder2 = 38; //Should be a multiple of squareWidth
-  const int rightBorder2 = 2;
+  const int rightBorder2 = 0;
   const int topBorder2 = 16;
   const int botBorder2 = 2;
   const int leftBound2 = leftMargin + leftBorder2;
