@@ -188,10 +188,10 @@ void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_E
 void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
   //Windows:
   //Sleep(5);
-  //system("cls");
+  system("cls");
   //Linux:
   //usleep(20000);
-  system("clear");
+  //system("clear");
 
   printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
   return;
@@ -247,7 +247,7 @@ void drawCheckerboard(bool** ledArray, int topY, int leftX, int HEIGHT, int WIDT
   return;
 }
 void generateNextPieces(int* nextPieces) {
-  //Adds integers representing tetromino types to an array, without modifying existing valid types.
+  //Adds integers representing piece types to an array, without modifying existing types.
   //Each of the 7 types is placed at most once in each half of the array.
   int i, j;
   if(nextPieces[0] == -1) {
@@ -275,7 +275,7 @@ void generateNextPieces(int* nextPieces) {
   return;
 }
 void shiftNextPieces(int* nextPieces) {
-  //Moves each integer in the piece type array forward, discarding the first and replacing the last with -1 (invalid)
+  //Moves each piece type forward, discarding the first and replacing the last with -1 (invalid)
   int i;
   for(i = 0; i < 13; i++) {
     nextPieces[i] = nextPieces[i + 1];
@@ -284,7 +284,7 @@ void shiftNextPieces(int* nextPieces) {
   return;
 }
 int takeNextPiece(int* nextPieces) {
-  //Returns the first piece from the piece type array. It also shifts them and, if necessary, generates new pieces.
+  //Returns the first piece type from the array, shifts them, and, if necessary, generates new pieces.
   int pieceType = nextPieces[0];
   shiftNextPieces(nextPieces);
   if(nextPieces[7] == -1){
@@ -391,7 +391,7 @@ void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, in
       secondGap = SQUARE_WIDTH;
     }
   }
-  //A shadow block is only lit in the bottom right, which is relative to the player:
+  //A shadow block is only lit in the bottom right, so the drawing loops are player-dependent:
   if(player == 1) {
     for(j = PIECE_WIDTH - 1; j >= 0; j -= SQUARE_WIDTH) {
       for(i = 0; i < PIECE_WIDTH; i += SQUARE_WIDTH) {
@@ -535,6 +535,22 @@ int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int
     }
   }
 }
+int changePieceOrien(int pieceOrien, int modifier) {
+  //Returns pieceOrien, turned 90 degrees clockwise (modifier == + 1) or counterclockwise (modifier == - 1)
+  if(modifier == 1) {
+    pieceOrien++;
+    if(pieceOrien > 4) {
+      pieceOrien -= 4;
+    }
+  }
+  else {
+    pieceOrien--;
+    if(pieceOrien < 1) {
+      pieceOrien += 4;
+    }
+  }
+  return pieceOrien;
+}
 
 void tetrisTwoPlayer(bool** ledArray) {
 
@@ -554,7 +570,7 @@ void tetrisTwoPlayer(bool** ledArray) {
 
   srand(time(NULL));
 
-  int dropTime = 10; //Should be > 1; may be decreased for difficulty, but decreasing it might also reduce responsiveness
+  int dropTime = 10; //Decreasing reduces responsiveness but increases speed/difficulty without processor cost. Should be > 1
 
   //Drawing checkboard border base to the large array:
   drawCheckerboard(ledArray, 0, 0, BOT_END + 1 - TOP_MARGIN, RIGHT_END + 1 - LEFT_MARGIN);
@@ -564,18 +580,22 @@ void tetrisTwoPlayer(bool** ledArray) {
   const int RIGHT_BORDER = 38;
   const int TOP_BORDER = 2;
   const int BOT_BORDER = 16;
+  const int LEFT_BOUND = LEFT_MARGIN + LEFT_BORDER;
+  const int RIGHT_BOUND = RIGHT_END - RIGHT_BORDER;
+  const int TOP_BOUND = TOP_MARGIN + TOP_BORDER;
+  const int BOT_BOUND = BOT_END - BOT_BORDER;
 
   //Player 1: Arrays of upcoming piece types:
   int* nextPieces = make1DArray(14);
   generateNextPieces(nextPieces);
 
   //Player 1: Object constants:
-  const int INIT_X = RIGHT_END + 1 - RIGHT_BORDER - SQUARE_WIDTH * 4;
-  const int INIT_Y = TOP_BORDER + (BOT_END + 1 - BOT_BORDER - TOP_BORDER) / 2 - SQUARE_WIDTH * 2;
+  const int INIT_PIECE_X = RIGHT_BOUND + 1 - SQUARE_WIDTH * 4;
+  const int INIT_PIECE_Y = TOP_BORDER + (BOT_BOUND + 1 - TOP_BORDER) / 2 - SQUARE_WIDTH * 2;
 
   //Player 1: Object variables:
-  float curX = INIT_X;
-  float curY = INIT_Y;
+  float curX = INIT_PIECE_X;
+  float curY = INIT_PIECE_Y;
   float projX = curX;
   float projY = curY;
   float shadX = curX;
@@ -588,10 +608,11 @@ void tetrisTwoPlayer(bool** ledArray) {
   bool pieceMoved = true;
 
   //Player 1: Initializing held piece and next pieces:
-  const int NEXT_PIECES_Y = BOT_END + 1 - SQUARE_WIDTH * 6;
+  const int HELD_PIECE_Y = BOT_END + 1 - SQUARE_WIDTH * 5 - 1;
+  const int NEXT_PIECES_Y = BOT_END + 1 - SQUARE_WIDTH * 6 - 1;
   const int HELD_PIECE_X = SQUARE_WIDTH * 13;
-  const int FIRST_NEXT_PIECE_X = HELD_PIECE_X - SQUARE_WIDTH * 7;
-  const int SECOND_NEXT_PIECE_X = FIRST_NEXT_PIECE_X - SQUARE_WIDTH * 5;
+  const int FIRST_NEXT_PIECE_X = HELD_PIECE_X - SQUARE_WIDTH * 6;
+  const int SECOND_NEXT_PIECE_X = FIRST_NEXT_PIECE_X - SQUARE_WIDTH * 6;
   int heldPieceType = - 1;
   bool holdAllowed = true;
   bool** heldPiece = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
@@ -602,10 +623,10 @@ void tetrisTwoPlayer(bool** ledArray) {
   importPiece(secondNextPiece, nextPieces[1], 2, PIECE_WIDTH, 1);
 
   //Player 1: Erasing parts of the checkerboard pattern on the array:
-  drawRectangle(ledArray, false, TOP_BORDER, LEFT_BORDER, BOT_END + 1 - BOT_BORDER - TOP_BORDER, RIGHT_END + 1 - RIGHT_BORDER - LEFT_BORDER);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y, HELD_PIECE_X, PIECE_WIDTH, PIECE_WIDTH);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, PIECE_WIDTH);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, PIECE_WIDTH);
+  drawRectangle(ledArray, false, TOP_BORDER, LEFT_BORDER, BOT_BOUND + 1 - TOP_BORDER, RIGHT_BOUND + 1 - LEFT_BORDER);
+  drawRectangle(ledArray, false, HELD_PIECE_Y - 1, HELD_PIECE_X, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
+  drawRectangle(ledArray, false, NEXT_PIECES_Y - 1, FIRST_NEXT_PIECE_X, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
+  drawRectangle(ledArray, false, NEXT_PIECES_Y - 1, SECOND_NEXT_PIECE_X, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
 
   //Player 1: Drawing next pieces:
   drawPiece(ledArray, firstNextPiece, nextPieces[0], true, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
@@ -620,25 +641,27 @@ void tetrisTwoPlayer(bool** ledArray) {
     shadX -= SQUARE_WIDTH;
   }
 
-  ////Player 2 initialization:
-
   //Player 2: Playfield constraints:
   const int LEFT_BORDER_2 = 38; //Should be a multiple of SQUARE_WIDTH
   const int RIGHT_BORDER_2 = 2;
   const int TOP_BORDER_2 = 16;
   const int BOT_BORDER_2 = 2;
+  const int LEFT_BOUND_2 = LEFT_MARGIN + LEFT_BORDER_2;
+  const int RIGHT_BOUND_2 = RIGHT_END - RIGHT_BORDER_2;
+  const int TOP_BOUND_2 = TOP_MARGIN + TOP_BORDER_2;
+  const int BOT_BOUND_2 = BOT_END - BOT_BORDER_2;
 
   //Player 2: "Bags" of upcoming piece types ("double" indicating two sets of types each):
   int* nextPieces2 = make1DArray(14);
   generateNextPieces(nextPieces2);
 
   //Player 2: Object constants:
-  const int INIT_X_2 = LEFT_MARGIN + LEFT_BORDER_2;
-  const int INIT_Y_2 = TOP_BORDER_2 + (BOT_END + 1 - BOT_BORDER_2 - TOP_BORDER_2) / 2 - SQUARE_WIDTH * 2;
+  const int INIT_PIECE_X_2 = LEFT_BOUND_2;
+  const int INIT_PIECE_Y_2 = TOP_BORDER_2 + (BOT_BOUND_2 + 1 - TOP_BORDER_2) / 2 - SQUARE_WIDTH * 2;
 
   //Player 2: Object variables:
-  float curX2 = INIT_X_2;
-  float curY2 = INIT_Y_2;
+  float curX2 = INIT_PIECE_X_2;
+  float curY2 = INIT_PIECE_Y_2;
   float projX2 = curX2;
   float projY2 = curY2;
   float shadX2 = curX2;
@@ -651,10 +674,11 @@ void tetrisTwoPlayer(bool** ledArray) {
   bool pieceMoved2 = true;
 
   //Player 2: Initializing held piece and next pieces:
-  const int NEXT_PIECES_Y_2 = TOP_MARGIN + SQUARE_WIDTH * 2;
+  const int HELD_PIECE_Y_2 = TOP_MARGIN + SQUARE_WIDTH + 1;
+  const int NEXT_PIECES_Y_2 = TOP_MARGIN + SQUARE_WIDTH * 2 + 1;
   const int HELD_PIECE_X_2 = LEFT_BORDER_2 + SQUARE_WIDTH * 2;
-  const int FIRST_NEXT_PIECE_X_2 = HELD_PIECE_X_2 + SQUARE_WIDTH * 7;
-  const int SECOND_NEXT_PIECE_X_2 = FIRST_NEXT_PIECE_X_2 + SQUARE_WIDTH * 5;
+  const int FIRST_NEXT_PIECE_X_2 = HELD_PIECE_X_2 + SQUARE_WIDTH * 6;
+  const int SECOND_NEXT_PIECE_X_2 = FIRST_NEXT_PIECE_X_2 + SQUARE_WIDTH * 6;
   int heldPieceType2 = - 1;
   bool holdAllowed2 = true;
   bool** heldPiece2 = make2DArray(PIECE_WIDTH, PIECE_WIDTH);
@@ -665,10 +689,10 @@ void tetrisTwoPlayer(bool** ledArray) {
   importPiece(secondNextPiece2, nextPieces2[1], 4, PIECE_WIDTH, 2);
 
   //Player 2: Erasing parts of the checkerboard pattern on the array:
-  drawRectangle(ledArray, false, TOP_BORDER_2, LEFT_BORDER_2, BOT_END + 1 - BOT_BORDER_2 - TOP_BORDER_2, RIGHT_END + 1 - RIGHT_BORDER_2 - LEFT_BORDER_2);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, PIECE_WIDTH);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, PIECE_WIDTH);
-  drawRectangle(ledArray, false, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, PIECE_WIDTH);
+  drawRectangle(ledArray, false, TOP_BORDER_2, LEFT_BORDER_2, BOT_BOUND_2 + 1 - TOP_BORDER_2, RIGHT_BOUND_2 + 1 - LEFT_BORDER_2);
+  drawRectangle(ledArray, false, HELD_PIECE_Y_2 - 1, HELD_PIECE_X_2 - SQUARE_WIDTH, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
+  drawRectangle(ledArray, false, NEXT_PIECES_Y_2 - 1, FIRST_NEXT_PIECE_X_2 - SQUARE_WIDTH, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
+  drawRectangle(ledArray, false, NEXT_PIECES_Y_2 - 1, SECOND_NEXT_PIECE_X_2 - SQUARE_WIDTH, SQUARE_WIDTH * 5, SQUARE_WIDTH * 5);
 
   //Player 2: Drawing next pieces:
   drawPiece(ledArray, firstNextPiece2, nextPieces2[0], true, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
@@ -725,27 +749,17 @@ void tetrisTwoPlayer(bool** ledArray) {
       while(checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, false) == 0) {
         projX -= SQUARE_WIDTH;
         drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH, 1);
-        copyPiece(curPiece, projPiece, PIECE_WIDTH);
+        drawPiece(ledArray, curPiece, curType, true, curY, projX, PIECE_WIDTH, 1);
         curX = projX;
-        curY = projY;
-        drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH, 1);
         frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
       }
-      linesCleared += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, curX, PIECE_WIDTH, 1);
-      if(linesCleared2 > 3){
+      linesCleared += checkLines(ledArray, LEFT_BOUND, RIGHT_BOUND, BOT_BOUND, TOP_BOUND, curX, PIECE_WIDTH, 1);
+      while(linesCleared2 > 3){
         linesCleared2 -= 4;
-        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
-          break;
-        }
-        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+        if(addGarbage(ledArray, LEFT_BOUND, RIGHT_BOUND, BOT_BOUND, TOP_BOUND, SQUARE_WIDTH, 1)){
           break;
         }
       }
-      projX = INIT_X;
-      projY = INIT_Y;
-      curX = projX;
-      curY = projY;
-      shadX = curX;
       drawPiece(ledArray, firstNextPiece, nextPieces[0], false, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
       drawPiece(ledArray, secondNextPiece, nextPieces[1], false, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
       curType = takeNextPiece(nextPieces);
@@ -754,31 +768,28 @@ void tetrisTwoPlayer(bool** ledArray) {
       importPiece(secondNextPiece, nextPieces[1], 2, PIECE_WIDTH, 1);
       drawPiece(ledArray, firstNextPiece, nextPieces[0], true, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
       drawPiece(ledArray, secondNextPiece, nextPieces[1], true, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
+      projX = INIT_PIECE_X;
+      projY = INIT_PIECE_Y;
+      curX = projX;
+      curY = projY;
+      shadX = curX;
       pieceOrien = 2;
-      timer = 1;
       copyPiece(projPiece, curPiece, PIECE_WIDTH);
-      holdAllowed = true;
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, true)) {
         break; //Game loss
       }
+      holdAllowed = true;
+      timer = 1;
     }
     else if(input == 5 || timer++ % dropTime == 0) { //Soft drop
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX - SQUARE_WIDTH, curY, curX, PIECE_WIDTH, false)) {
-        linesCleared += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, curX, PIECE_WIDTH, 1);
-        if(linesCleared2 > 3){
+        linesCleared += checkLines(ledArray, LEFT_BOUND, RIGHT_BOUND, BOT_BOUND, TOP_BOUND, curX, PIECE_WIDTH, 1);
+        while(linesCleared2 > 3){
           linesCleared2 -= 4;
-          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
-            break;
-          }
-          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER, TOP_MARGIN + TOP_BORDER, SQUARE_WIDTH, 1)){
+          if(addGarbage(ledArray, LEFT_BOUND, RIGHT_BOUND, BOT_BOUND, TOP_BOUND, SQUARE_WIDTH, 1)){
             break;
           }
         }
-        projX = INIT_X;
-        projY = INIT_Y;
-        curX = projX;
-        curY = projY;
-        shadX = curX;
         drawPiece(ledArray, firstNextPiece, nextPieces[0], false, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
         drawPiece(ledArray, secondNextPiece, nextPieces[1], false, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
         curType = takeNextPiece(nextPieces);
@@ -787,24 +798,25 @@ void tetrisTwoPlayer(bool** ledArray) {
         importPiece(secondNextPiece, nextPieces[1], 2, PIECE_WIDTH, 1);
         drawPiece(ledArray, firstNextPiece, nextPieces[0], true, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
         drawPiece(ledArray, secondNextPiece, nextPieces[1], true, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
+        projX = INIT_PIECE_X;
+        projY = INIT_PIECE_Y;
+        curX = projX;
+        curY = projY;
+        shadX = curX;
         pieceOrien = 2;
-        timer = 1;
         copyPiece(projPiece, curPiece, PIECE_WIDTH);
-        holdAllowed = true;
         if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, true)) {
           break; //Game loss
         }
+        holdAllowed = true;
       }
       else {
         projX -= SQUARE_WIDTH;
-        timer = 1;
       }
+      timer = 1;
     }
     else if(input == 9) { //Spin clockwise
-      pieceOrien++;
-      if(pieceOrien > 4) {
-        pieceOrien -= 4;
-      }
+      pieceOrien = changePieceOrien(pieceOrien, + 1);
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, false)) {
         if(!checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, false)) {
@@ -820,20 +832,14 @@ void tetrisTwoPlayer(bool** ledArray) {
           projY -= 2 * SQUARE_WIDTH;
         }
         else {
-          pieceOrien--;
-          if(pieceOrien < 1) {
-            pieceOrien += 4;
-          }
+          pieceOrien = changePieceOrien(pieceOrien, - 1);
           importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
           pieceMoved = false;
         }
       }
     }
     else if(input == 10) { //Spin counterclockwise
-      pieceOrien--;
-      if(pieceOrien < 1) {
-        pieceOrien += 4;
-      }
+      pieceOrien = changePieceOrien(pieceOrien, - 1);
       importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
       if(checkOverlap(ledArray, projPiece, curPiece, projY, projX, curY, curX, PIECE_WIDTH, false)) {
         if(!checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH,  false)) {
@@ -849,10 +855,7 @@ void tetrisTwoPlayer(bool** ledArray) {
           projY -= 2 * SQUARE_WIDTH;
         }
         else {
-          pieceOrien++;
-          if(pieceOrien > 4) {
-            pieceOrien -= 4;
-          }
+          pieceOrien = changePieceOrien(pieceOrien, + 1);
           importPiece(projPiece, curType, pieceOrien, PIECE_WIDTH, 1);
           pieceMoved = false;
         }
@@ -878,8 +881,8 @@ void tetrisTwoPlayer(bool** ledArray) {
       if(heldPieceType == -1) {
         drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH, 1);
         drawShadow(ledArray, curPiece, curType, false, curY, shadX, PIECE_WIDTH, 1);
-        projX = INIT_X;
-        projY = INIT_Y;
+        projX = INIT_PIECE_X;
+        projY = INIT_PIECE_Y;
         curX = projX;
         curY = projY;
         shadX = curX;
@@ -887,23 +890,20 @@ void tetrisTwoPlayer(bool** ledArray) {
         drawPiece(ledArray, secondNextPiece, nextPieces[1], false, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
         heldPieceType = curType;
         importPiece(heldPiece, curType, 2, PIECE_WIDTH, 1);
-        drawPiece(ledArray, heldPiece, heldPieceType, true, NEXT_PIECES_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
+        drawPiece(ledArray, heldPiece, heldPieceType, true, HELD_PIECE_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
         curType = takeNextPiece(nextPieces);
         copyPiece(curPiece, firstNextPiece, PIECE_WIDTH);
         copyPiece(firstNextPiece, secondNextPiece, PIECE_WIDTH);
         importPiece(secondNextPiece, nextPieces[1], 2, PIECE_WIDTH, 1);
         drawPiece(ledArray, firstNextPiece, nextPieces[0], true, NEXT_PIECES_Y, FIRST_NEXT_PIECE_X, PIECE_WIDTH, 1);
         drawPiece(ledArray, secondNextPiece, nextPieces[1], true, NEXT_PIECES_Y, SECOND_NEXT_PIECE_X, PIECE_WIDTH, 1);
-        pieceOrien = 2;
-        timer = 1;
-        copyPiece(projPiece, curPiece, PIECE_WIDTH);
       }
       else{
-        drawPiece(ledArray, heldPiece, heldPieceType, false, NEXT_PIECES_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
+        drawPiece(ledArray, heldPiece, heldPieceType, false, HELD_PIECE_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
         drawPiece(ledArray, curPiece, curType, false, curY, curX, PIECE_WIDTH, 1);
         drawShadow(ledArray, curPiece, curType, false, curY, shadX, PIECE_WIDTH, 1);
-        projX = INIT_X;
-        projY = INIT_Y;
+        projX = INIT_PIECE_X;
+        projY = INIT_PIECE_Y;
         curX = projX;
         curY = projY;
         shadX = curX;
@@ -912,11 +912,11 @@ void tetrisTwoPlayer(bool** ledArray) {
         int tempType = heldPieceType;
         heldPieceType = curType;
         curType = tempType;
-        drawPiece(ledArray, heldPiece, heldPieceType, true, NEXT_PIECES_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
-        pieceOrien = 2;
-        timer = 1;
-        copyPiece(projPiece, curPiece, PIECE_WIDTH);
+        drawPiece(ledArray, heldPiece, heldPieceType, true, HELD_PIECE_Y, HELD_PIECE_X, PIECE_WIDTH, 1);
       }
+      pieceOrien = 2;
+      timer = 1;
+      copyPiece(projPiece, curPiece, PIECE_WIDTH);
       holdAllowed = false;
     }
     else {
@@ -929,27 +929,17 @@ void tetrisTwoPlayer(bool** ledArray) {
       while(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, false) == 0) {
         projX2 += SQUARE_WIDTH;
         drawPiece(ledArray, curPiece2, curType2, false, curY2, curX2, PIECE_WIDTH, 2);
-        copyPiece(curPiece2, projPiece2, PIECE_WIDTH);
+        drawPiece(ledArray, curPiece2, curType2, true, curY2, projX2, PIECE_WIDTH, 2);
         curX2 = projX2;
-        curY2 = projY2;
-        drawPiece(ledArray, curPiece2, curType2, true, curY2, curX2, PIECE_WIDTH, 2);
         frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
       }
-      linesCleared2 += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, curX2, PIECE_WIDTH,  2);
-      if(linesCleared > 3){
+      linesCleared2 += checkLines(ledArray, LEFT_BOUND_2, RIGHT_BOUND_2, BOT_BOUND_2, TOP_BOUND_2, curX2, PIECE_WIDTH,  2);
+      while(linesCleared > 3){
         linesCleared -= 4;
-        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
-          break;
-        }
-        if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+        if(addGarbage(ledArray, LEFT_BOUND_2, RIGHT_BOUND_2, BOT_BOUND_2, TOP_BOUND_2, SQUARE_WIDTH, 2)) {
           break;
         }
       }
-      projX2 = INIT_X_2;
-      projY2 = INIT_Y_2;
-      curX2 = projX2;
-      curY2 = projY2;
-      shadX2 = curX2;
       drawPiece(ledArray, firstNextPiece2, nextPieces2[0], false, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
       drawPiece(ledArray, secondNextPiece2, nextPieces2[1], false, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
       curType2 = takeNextPiece(nextPieces2);
@@ -958,31 +948,28 @@ void tetrisTwoPlayer(bool** ledArray) {
       importPiece(secondNextPiece2, nextPieces2[1], 4, PIECE_WIDTH, 2);
       drawPiece(ledArray, firstNextPiece2, nextPieces2[0], true, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
       drawPiece(ledArray, secondNextPiece2, nextPieces2[1], true, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
+      projX2 = INIT_PIECE_X_2;
+      projY2 = INIT_PIECE_Y_2;
+      curX2 = projX2;
+      curY2 = projY2;
+      shadX2 = curX2;
       pieceOrien2 = 4;
-      timer2 = 1;
       copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
-      holdAllowed2 = true;
       if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, true)) {
         break; //Game loss
       }
+      holdAllowed2 = true;
+      timer2 = 1;
     }
     else if(input2 == 5 || timer2++ % dropTime == 0) { //Soft drop
       if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2 + SQUARE_WIDTH, curY2, curX2, PIECE_WIDTH, false)) {
-        linesCleared2 += checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, curX2, PIECE_WIDTH, 2);
-        if(linesCleared > 3){
+        linesCleared2 += checkLines(ledArray, LEFT_BOUND_2, RIGHT_BOUND_2, BOT_BOUND_2, TOP_BOUND_2, curX2, PIECE_WIDTH, 2);
+        while(linesCleared > 3){
           linesCleared -= 4;
-          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
-            break;
-          }
-          if(addGarbage(ledArray, LEFT_MARGIN + LEFT_BORDER_2, RIGHT_END - RIGHT_BORDER_2, BOT_END - BOT_BORDER_2, TOP_MARGIN + TOP_BORDER_2, SQUARE_WIDTH, 2)) {
+          if(addGarbage(ledArray, LEFT_BOUND_2, RIGHT_BOUND_2, BOT_BOUND_2, TOP_BOUND_2, SQUARE_WIDTH, 2)) {
             break;
           }
         }
-        projX2 = INIT_X_2;
-        projY2 = INIT_Y_2;
-        curX2 = projX2;
-        curY2 = projY2;
-        shadX2 = curX2;
         drawPiece(ledArray, firstNextPiece2, nextPieces2[0], false, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
         drawPiece(ledArray, secondNextPiece2, nextPieces2[1], false, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
         curType2 = takeNextPiece(nextPieces2);
@@ -991,24 +978,25 @@ void tetrisTwoPlayer(bool** ledArray) {
         importPiece(secondNextPiece2, nextPieces2[1], 4, PIECE_WIDTH, 2);
         drawPiece(ledArray, firstNextPiece2, nextPieces2[0], true, NEXT_PIECES_Y_2, FIRST_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
         drawPiece(ledArray, secondNextPiece2, nextPieces2[1], true, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
+        projX2 = INIT_PIECE_X_2;
+        projY2 = INIT_PIECE_Y_2;
+        curX2 = projX2;
+        curY2 = projY2;
+        shadX2 = curX2;
         pieceOrien2 = 4;
-        timer2 = 1;
         copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
-        holdAllowed2 = true;
         if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, true)) {
           break; //Game loss
         }
+        holdAllowed2 = true;
       }
       else {
         projX2 += SQUARE_WIDTH;
-        timer2 = 1;
       }
+      timer2 = 1;
     }
     else if(input2 == 9) { //Spin clockwise
-      pieceOrien2++;
-      if(pieceOrien2 > 4) {
-        pieceOrien2 -= 4;
-      }
+      pieceOrien2 = changePieceOrien(pieceOrien2, + 1);
       importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
       if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, false)) {
         if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 - SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, false)) {
@@ -1024,20 +1012,14 @@ void tetrisTwoPlayer(bool** ledArray) {
           projY2 += 2 * SQUARE_WIDTH;
         }
         else {
-          pieceOrien2--;
-          if(pieceOrien2 < 1) {
-            pieceOrien2 += 4;
-          }
+          pieceOrien2 = changePieceOrien(pieceOrien2, - 1);
           importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
           pieceMoved2 = false;
         }
       }
     }
     else if(input2 == 10) { //Spin counterclockwise
-      pieceOrien2--;
-      if(pieceOrien2 < 1) {
-        pieceOrien2 += 4;
-      }
+      pieceOrien2 = changePieceOrien(pieceOrien2, - 1);
       importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
       if(checkOverlap(ledArray, projPiece2, curPiece2, projY2, projX2, curY2, curX2, PIECE_WIDTH, false)) {
         if(!checkOverlap(ledArray, projPiece2, curPiece2, projY2 - SQUARE_WIDTH, projX2, curY2, curX2, PIECE_WIDTH, false)) {
@@ -1053,10 +1035,7 @@ void tetrisTwoPlayer(bool** ledArray) {
           projY2 += 2 * SQUARE_WIDTH;
         }
         else {
-          pieceOrien2++;
-          if(pieceOrien2 > 4) {
-            pieceOrien2 -= 4;
-          }
+          pieceOrien2 = changePieceOrien(pieceOrien2, + 1);
           pieceMoved2 = false;
           importPiece(projPiece2, curType2, pieceOrien2, PIECE_WIDTH, 2);
         }
@@ -1082,8 +1061,8 @@ void tetrisTwoPlayer(bool** ledArray) {
       if(heldPieceType2 == -1) {
         drawPiece(ledArray, curPiece2, curType2, false, curY2, curX2, PIECE_WIDTH, 2);
         drawShadow(ledArray, curPiece2, curType2, false, curY2, shadX2, PIECE_WIDTH, 2);
-        projX2 = INIT_X_2;
-        projY2 = INIT_Y_2;
+        projX2 = INIT_PIECE_X_2;
+        projY2 = INIT_PIECE_Y_2;
         curX2 = projX2;
         curY2 = projY2;
         shadX2 = curX2;
@@ -1091,7 +1070,7 @@ void tetrisTwoPlayer(bool** ledArray) {
         drawPiece(ledArray, secondNextPiece2, nextPieces2[1], false, NEXT_PIECES_Y_2, SECOND_NEXT_PIECE_X_2, PIECE_WIDTH, 2);
         heldPieceType2 = curType2;
         importPiece(heldPiece2, curType2, 4, PIECE_WIDTH, 2);
-        drawPiece(ledArray, heldPiece2, heldPieceType2, true, NEXT_PIECES_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
+        drawPiece(ledArray, heldPiece2, heldPieceType2, true, HELD_PIECE_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
         curType2 = takeNextPiece(nextPieces2);
         copyPiece(curPiece2, firstNextPiece2, PIECE_WIDTH);
         copyPiece(firstNextPiece2, secondNextPiece2, PIECE_WIDTH);
@@ -1103,11 +1082,11 @@ void tetrisTwoPlayer(bool** ledArray) {
         copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
       }
       else{
-        drawPiece(ledArray, heldPiece2, heldPieceType2, false, NEXT_PIECES_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
+        drawPiece(ledArray, heldPiece2, heldPieceType2, false, HELD_PIECE_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
         drawPiece(ledArray, curPiece2, curType2, false, curY2, curX2, PIECE_WIDTH, 2);
         drawShadow(ledArray, curPiece2, curType2, false, curY2, shadX2, PIECE_WIDTH, 2);
-        projX2 = INIT_X_2;
-        projY2 = INIT_Y_2;
+        projX2 = INIT_PIECE_X_2;
+        projY2 = INIT_PIECE_Y_2;
         curX2 = projX2;
         curY2 = projY2;
         shadX2 = curX2;
@@ -1116,7 +1095,7 @@ void tetrisTwoPlayer(bool** ledArray) {
         int tempType2 = heldPieceType2;
         heldPieceType2 = curType2;
         curType2 = tempType2;
-        drawPiece(ledArray, heldPiece2, heldPieceType2, true, NEXT_PIECES_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
+        drawPiece(ledArray, heldPiece2, heldPieceType2, true, HELD_PIECE_Y_2, HELD_PIECE_X_2, PIECE_WIDTH, 2);
         pieceOrien2 = 4;
         timer2 = 1;
         copyPiece(projPiece2, curPiece2, PIECE_WIDTH);
