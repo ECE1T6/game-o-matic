@@ -206,7 +206,7 @@ bool** make2DArray(float height, float width) {
   }
   return ledArray;
 }
-void fill2DArray(bool** ledArray, float height, float width, bool lightsOn) {
+void fill2DArray(bool** ledArray, int height, int width, bool lightsOn) {
   int i, j;
   for(i = 0; i < height; i++) {
     for(j = 0; j < width; j++) {
