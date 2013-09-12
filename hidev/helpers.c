@@ -125,10 +125,10 @@ bool getRightButton(unsigned char player){
 	return state;
 }
 
-void printTest(bool** ledArray) {
+void printTest(bool** ledArray, float topMargin, float leftMargin, float botEnd, float rightEnd) {
   int i, j;
-  for(i = TOP_MARGIN; i <= BOTTOM_END; i++) {
-    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
+  for(i = topMargin; i <= botEnd; i++) {
+    for(j = leftMargin; j <= rightEnd; j++) {
       if(ledArray[i][j] == true) {
         printf("O", ledArray[i][j]);
       }
@@ -141,7 +141,7 @@ void printTest(bool** ledArray) {
   return;
 }
 
-void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
+void frameTest(bool** ledArray, float topMargin, float leftMargin, float botEnd, float rightEnd) {
   //Windows:
   //Sleep(5);
   //system("cls");
@@ -149,6 +149,6 @@ void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_E
   usleep(50000);
   system("clear");
 
-  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
+  printTest(ledArray, topMargin, leftMargin, botEnd, rightEnd);
 }
 
