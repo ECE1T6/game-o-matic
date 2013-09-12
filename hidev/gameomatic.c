@@ -15,33 +15,34 @@
 #include "tetris.h"
 #include "helpers.h"
 
-/*Variables used by all games:*/
-const float ARRAY_HEIGHT = 38.0;
-const float ARRAY_WIDTH = 76.0;
-float TOP_MARGIN; /*The margins bound the playable area of the game.*/
-float BOTTOM_MARGIN;
-float LEFT_MARGIN;
-float RIGHT_MARGIN;
-float BOTTOM_END; /*= ARRAY_HEIGHT - BOTTOM_MARGIN - 1.0*/
-float RIGHT_END; /*= ARRAY_WIDTH - RIGHT_MARGIN - 1.0*/
-
 int main (void) {
+  const float arrayHeight = 38.0;
+  const float arrayWidth = 76.0;
   bool** ledArray;
-  ledArray = makeArray(ARRAY_HEIGHT, ARRAY_WIDTH);
-  fillArray(ledArray, ARRAY_HEIGHT, ARRAY_WIDTH, false);
+  ledArray = makeArray(arrayHeight, arrayWidth);
+  fillArray(ledArray, arrayHeight, arrayWidth, false);
 
   /*Here we will assign the lodev display function to the array and decorate it*/
 
   int input = 0;
   do {
-    printf("Welcome to the game-o-matic!\nEnter \"1\" to play pong!\nEnter \"2\" to play snake!\nEnter \"0\" to exit.");
+    printf("Welcome to the game-o-matic!\nEnter \"1\" to play single player Snake!\nEnter \"2\" to play two player Snake!\nEnter \"3\" to play single player Tetris!\nEnter \"4\" to play two player Tetris!\nEnter \"5\" to play Pong!\nEnter \"0\" to exit.");
     scanf("%d", &input);
-  } while(input < 0 || input > 2);
+  } while(input < 0 || input > 5);
   if(input == 1) {
-    pong(ledArray);
+    snakeSinglePlayer(ledArray);
   }
   if(input == 2) {
-    snake(ledArray);
+    snakeTwoPlayer(ledArray);
+  }
+  if(input == 3) {
+    tetrisSinglePlayer(ledArray);
+  }
+  if(input == 4) {
+    tetrisTwoPlayer(ledArray);
+  }
+  if(input == 5) {
+    pong(ledArray);
   }
   freeArray(ledArray);
   return 0;
