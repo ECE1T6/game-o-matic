@@ -5,12 +5,11 @@ echo "Starting Compilation..."
 #hidev libraries
 cd hidev
 gcc gameomatic.c helpers.c pong.c tetrisGame.c snakeTwoPlayer.c snakeSinglePlayer.c -o gameomatic -lm -std=gnu99
-
 GCC = $?
-if [ $RET1 == 2 ]; then #compilation failed for some reason
+if [ $GCC == 2 ]; then #compilation failed for some reason
   echo "Hidev Compilation FAILED"
   exit 1;
-elif [ $RET != 0 ]; then #compilation had warnings
+elif [ $GCC != 0 ]; then #compilation had warnings
   echo "...Hidev Compiled, with warnings"
 else 
   echo "...Hidev Compiled Succesfully."
@@ -25,7 +24,7 @@ GCC = $?
 if [ $GCC == 2 ]; then #sucessful compilation
   echo "Lodev Compilation FAILED"
   exit 1;
-elif [ $RET != 0 ]; then #compilation had warnings
+elif [ $GCC != 0 ]; then #compilation had warnings
   echo "...Lodev Compiled, with warnings"
 else 
   echo "Compiled lodev libraries; executable as 'run'."
