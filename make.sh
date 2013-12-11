@@ -5,7 +5,7 @@ echo "Starting Compilation..."
 #hidev libraries
 cd hidev
 gcc gameomatic.c helpers.c pong.c tetrisGame.c snakeTwoPlayer.c snakeSinglePlayer.c -o gameomatic -lm -std=gnu99
-GCC = $?
+GCC=$?
 if [ $GCC == 2 ]; then #compilation failed for some reason
   echo "Hidev Compilation FAILED"
   exit 1;
@@ -20,7 +20,7 @@ cd ../lodev
 
 echo "Compiling low-level libraries..."
 gcc -Wall -pthread displayTest.c lodevInit.c register.c render.c control.c -o displayTest -lwiringPi -std=gnu99
-GCC = $?
+GCC=$?
 if [ $GCC == 2 ]; then #sucessful compilation
   echo "Lodev Compilation FAILED"
   exit 1;
