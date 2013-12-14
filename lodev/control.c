@@ -22,7 +22,7 @@
 
 //player 2
 #define JOY2_UP 11
-#define	JOY2_RIGHT 12
+#define JOY2_RIGHT 12
 #define JOY2_DOWN 13
 #define JOY2_LEFT 14
 #define LEFT2 19
@@ -38,14 +38,14 @@ void setDigit(unsigned char *player, int button, int binaryDigit){
 void getControl(ControlData *tdata) {
  //code for grabbing positions from GPIO ports
 
-	const unsigned char *player [2] = {tdata->player1, tdata->player2};
-	const int button [2][6] = {
+	unsigned char *player [2] = {tdata->player1, tdata->player2};
+	int button [2][6] = {
 														{RIGHT1, LEFT1, JOY1_UP, JOY1_RIGHT, JOY1_DOWN, JOY1_LEFT},
 														{RIGHT2, LEFT2, JOY2_UP, JOY2_RIGHT, JOY2_DOWN, JOY2_LEFT},
 														};
 
-	for (int i = 0; i++; i<2){
-			for (int j = 0; j++; j<6){
+	for (int i = 0; i<2; i++){
+			for (int j = 0; j<6; j++){
 				setDigit(player[i], button[i][j], j);
 			}
 	}
