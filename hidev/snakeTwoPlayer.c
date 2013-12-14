@@ -14,18 +14,25 @@ thread and with a sufficiently long pause implemented in freezeFrame().
 For the purposes of reading and attempting optimization, one may delete all Windows-reliant code and
 all definitions under "Test functions:" including all calls to them. Ignore the contents of main().
 */
+#include "snake.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-//Windows (for testing only):
-//#include <windows.h>
-//#include <conio.h>
-//Linux:
-#include <unistd.h>
+//Snake-specific functions:
+static int getLeftInput(void); //lodev placeholder
+static int getRightInput(void); //lodev placeholder
+static void printWinner(int winner); //lodev placeholder
 
-//Structures:
+static struct segment *initializeList(int INITIAL_X, int INITIAL_Y, int INITIAL_SIZE, bool **ledArray, int moveDir);
+static void placeFood(int *foodX, int *foodY, struct segment *first, struct segment *first2, int HEIGHT, int WIDTH, int FIRST_TOP, int FIRST_LEFT, bool **ledArray);
+static int moveHeadCoords(int moveDir, int visibleMoveDir, float *headX, float *headY, float moveDistance, int player);
+static void endGame(bool **ledArray, int foodY, int foodX, int foodY2, int foodX2, struct segment *first, struct segment *first2);
+static struct segment *addToList(struct segment *first, int newX, int newY, bool **ledArray);
+static int checkCollision(int newX, int newY, struct segment *first);
+static int checkOutBounds(int headX, int headY, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END);
+static struct segment *truncateList(struct segment *first, bool **ledArray);
+static void shiftList(struct segment *first, int headX, int headY, bool **ledArray);
+
+
+//Snake-specific Structures:
 struct segment {
   int x;
   int y;
@@ -33,10 +40,6 @@ struct segment {
 };
 
 //Game-agnostic functions (require lodev support):
-void freezeFrame(void) {
-  //Call a sleep function roughly the length of a frame. Adjust for aesthetics.
-  usleep(50000);
-}
 int getLeftInput(void) { //This is a placeholder for a lodev function
 /*
   if(kbhit()) {
@@ -91,58 +94,6 @@ int getRightInput(void) { //This is a placeholder for a lodev function
 }
 void printWinner(int winner) { //This is a placeholder for a lodev function
   //This should take 1 or 2 and congradulate the corresponding player.
-}
-
-//Test functions (remove in final version):
-bool** make2DArray(float HEIGHT, float WIDTH) {
-  int i;
-  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
-  for (i = 0; i < HEIGHT; i++) {
-    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
-  }
-  return ledArray;
-}
-void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
-  int i, j;
-  for(i = 0; i < HEIGHT; i++) {
-    for(j = 0; j < WIDTH; j++) {
-      ledArray[i][j] = lightsOn;
-    }
-  }
-  return;
-}
-void free2DArray(bool** ledArray, int HEIGHT) {
-  int i;
-  for (i = 0; i < HEIGHT; i++) {
-    free(ledArray[i]);
-  }
-  free(ledArray);
-  return;
-}
-void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
-  int i, j;
-  for(i = TOP_MARGIN; i <= BOT_END; i++) {
-    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
-      if(ledArray[i][j] == true) {
-        printf("O", ledArray[i][j]);
-      }
-      else {
-        printf("*", ledArray[i][j]);
-      }
-    }
-    printf("\n");
-  }
-  return;
-}
-void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
-  //Windows:
-  //Sleep(5);
-  //system("cls");
-  //Linux:
-  usleep(50000);
-  system("clear");
-
-  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
 }
 
 //Snake-specific functions:
@@ -248,17 +199,17 @@ struct segment *truncateList(struct segment *first, bool **ledArray) {
 void endGame(bool **ledArray, int foodY, int foodX, int foodY2, int foodX2, struct segment *first, struct segment *first2) {
   int endGameDelay;
   for(endGameDelay = 0; endGameDelay < 8; endGameDelay++) {
-    freezeFrame();
+    freezeFrame(30000);
   }
   ledArray[foodY][foodX] = false;
   ledArray[foodY2][foodX2] = false;
   while(first != NULL) {
     first = truncateList(first, ledArray);
-    freezeFrame();
+    freezeFrame(30000);
   }
   while(first2 != NULL) {
     first2 = truncateList(first2, ledArray);
-    freezeFrame();
+    freezeFrame(30000);
   }
   return;
 }
@@ -283,11 +234,9 @@ void shiftList(struct segment *first, int headX, int headY, bool **ledArray) {
   return;
 }
 
-void snake(bool** ledArray) {
+void snakeTwoPlayer(bool** ledArray) {
 
   //Playfield constants:
-  const float ARRAY_HEIGHT = 38.0;
-  const float ARRAY_WIDTH = 76.0;
   const float TOP_MARGIN = 5.0; //The margins bound the area controlled by the game.
   const float BOT_MARGIN = 5.0;
   const float LEFT_MARGIN = 10.0;
@@ -387,7 +336,7 @@ void snake(bool** ledArray) {
   return;
 }
 
-int main (void) {
+/*int main (void) {
   //This function's contents are throwaway. They mimic a lodev menu.
   const float ARRAY_HEIGHT = 38.0;
   const float ARRAY_WIDTH = 76.0;
@@ -397,4 +346,4 @@ int main (void) {
   snake(ledArray);
   free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
-}
+}*/

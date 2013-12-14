@@ -9,18 +9,17 @@
 #include "lodevInit.h"
 
 /*Hidev Libraries*/
-#include "snakeSinglePlayer.h"
-#include "snakeTwoPlayer.h"
+#include "snake.h"
 #include "pong.h"
 #include "tetris.h"
 #include "helpers.h"
 
 int main (void) {
-  const float arrayHeight = 38.0;
-  const float arrayWidth = 76.0;
+  const int arrayHeight = 38;
+  const int arrayWidth = 76;
   bool** ledArray;
-  ledArray = makeArray(arrayHeight, arrayWidth);
-  fillArray(ledArray, arrayHeight, arrayWidth, false);
+  ledArray = make2DArray(arrayHeight, arrayWidth);
+  fill2DArray(ledArray, arrayHeight, arrayWidth, false);
 
   /*Here we will assign the lodev display function to the array and decorate it*/
 
@@ -44,6 +43,6 @@ int main (void) {
   if(input == 5) {
     pong(ledArray);
   }
-  freeArray(ledArray);
+  free2DArray(ledArray, arrayWidth);
   return 0;
 }

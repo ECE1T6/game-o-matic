@@ -1,5 +1,6 @@
 #ifndef SCREEN_SCREEN_DATA_GUARD
 #define SCREEN_SCREEN_DATA_GUARD
+#include <stdbool.h>
 /*
   Screen wrapper for arguments passed to asynchronous thread functions.
 */

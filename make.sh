@@ -4,7 +4,7 @@
 echo "Starting Compilation..."
 #hidev libraries
 cd hidev
-gcc gameomatic.c helpers.c pong.c tetrisSinglePlayer.c tetrisTwoPlayer.c snakeTwoPlayer.c snakeSinglePlayer.c -o gameomatic -lm -std=gnu99
+gcc gameomatic.c helpers.c pong.c tetrominoes.c snakeTwoPlayer.c snakeSinglePlayer.c tetrisSinglePlayer.c tetrisTwoPlayer.c -o gameomatic -lm -I . -I ../lodev -std=gnu99
 GCC=$?
 if [ $GCC != 0 ]; then #compilation failed for some reason
   echo "Hidev Compilation FAILED"

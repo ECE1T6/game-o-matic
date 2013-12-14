@@ -1,22 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-//Windows (for testing only):
-//#include <windows.h>
-//#include <conio.h>
-//Linux:
-#include <unistd.h>
+#include "pong.h"
 
-//Game-agnostic functions (corresponding to helper.h functions, roughly right now):
-void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int HEIGHT, int WIDTH) {
-  int i, j;
-  for(j = HEIGHT - 1; j >= 0; j--) {
-    for(i = WIDTH - 1; i >= 0; i--) {
-      ledArray[topY + j][leftX + i] = lightsOn;
-    }
-  }
-  return;
-}
+//Game-agnostic functions (require lodev support):
 int getLeftInput(void) { //This is a placeholder for a lodev function
 /*
   if(kbhit()) {
@@ -69,61 +53,11 @@ int getRightInput(void) { //This is a placeholder for a lodev function
 */
   return 0;
 }
+
 void printWinner(int winner) { //This is a placeholder for a lodev function
   //This should take 1 or 2 and congradulate the corresponding player.
 }
 
-//Test functions (remove in final version):
-bool** make2DArray(float HEIGHT, float WIDTH) {
-  int i;
-  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
-  for (i = 0; i < HEIGHT; i++) {
-    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
-  }
-  return ledArray;
-}
-void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
-  int i, j;
-  for(i = 0; i < HEIGHT; i++) {
-    for(j = 0; j < WIDTH; j++) {
-      ledArray[i][j] = lightsOn;
-    }
-  }
-  return;
-}
-void free2DArray(bool** ledArray, int HEIGHT) {
-  int i;
-  for (i = 0; i < HEIGHT; i++) {
-    free(ledArray[i]);
-  }
-  free(ledArray);
-  return;
-}
-void printTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
-  int i, j;
-  for(i = TOP_MARGIN; i <= BOT_END; i++) {
-    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
-      if(ledArray[i][j] == true) {
-        printf("O", ledArray[i][j]);
-      }
-      else {
-        printf("*", ledArray[i][j]);
-      }
-    }
-    printf("\n");
-  }
-  return;
-}
-void frameTest(bool** ledArray, float TOP_MARGIN, float LEFT_MARGIN, float BOT_END, float RIGHT_END) {
-  //Windows:
-  //Sleep(5);
-  //system("cls");
-  //Linux:
-  usleep(50000);
-  system("clear");
-
-  printTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_END, RIGHT_END);
-}
 
 /*Pong-specific functions:*/
 void drawBall(bool** ledArray, bool lightsOn, int topY, int leftX, int BALL_DIAMETER, float LEFT_MARGIN, float RIGHT_END) {
@@ -264,8 +198,6 @@ int movePaddle(int padDir, float* topY, float MOVE_DISTANCE, int PAD_HEIGHT, boo
 void pong(bool** ledArray) {
 
   //Playfield constants:
-  const float ARRAY_HEIGHT = 38.0;
-  const float ARRAY_WIDTH = 76.0;
   const float TOP_MARGIN = 0.0; //The margins bound the area controlled by the game.
   const float BOT_MARGIN = 0.0;
   const float LEFT_MARGIN = 0.0;
@@ -375,7 +307,7 @@ void pong(bool** ledArray) {
   return;
 }
 
-int main (void) {
+/*int main (void) {
   //This function's contents are throwaway. They mimic a lodev menu.
   const float ARRAY_HEIGHT = 38.0;
   const float ARRAY_WIDTH = 76.0;
@@ -385,4 +317,4 @@ int main (void) {
   pong(ledArray);
   free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
-}
+}*/

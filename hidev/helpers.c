@@ -1,9 +1,5 @@
 /*Functions usable by all games in gameomatic libary*/
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include "helpers.h"
 
 void freezeFrame(unsigned int frames) {
   //Call a sleep function roughly the length of a frame, About 15000us = 1 frame.
@@ -43,29 +39,29 @@ void printScore(int score, char *position) { //This is a placeholder for a lodev
   }
   return;
 }
-
-bool** make2DArray(float HEIGHT, float WIDTH) {
+
+bool** make2DArray(int height, int width) {
   int i;
-  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
-  for (i = 0; i < HEIGHT; i++) {
-    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
+  bool** ledArray = (bool**) malloc(height*sizeof(bool*));
+  for (i = 0; i < height; i++) {
+    ledArray[i] = (bool*) malloc(width*sizeof(bool));
   }
   return ledArray;
 }
 
-void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
+void fill2DArray(bool** ledArray, int height, int width, bool lightsOn) {
   int i, j;
-  for(i = 0; i < HEIGHT; i++) {
-    for(j = 0; j < WIDTH; j++) {
+  for(i = 0; i < height; i++) {
+    for(j = 0; j < width; j++) {
       ledArray[i][j] = lightsOn;
     }
   }
   return;
 }
 
-free2DArray(bool** ledArray) {
+void free2DArray(bool** ledArray, int height) {
   int i;
-  for (i = 0; i < ARRAY_HEIGHT; i++) {
+  for (i = 0; i < height; i++) {
     free(ledArray[i]);
   }
   free(ledArray);
@@ -123,6 +119,30 @@ bool getRightButton(unsigned char player){
 		state = true;
 	}
 	return state;
+}
+
+int* make1DArray(int LENGTH) {
+  int* longArray = (int*) malloc(LENGTH*sizeof(int));
+  int i;
+  for(i = 0; i < LENGTH; i++) {
+    longArray[i] = -1;
+  }
+  return longArray;
+}
+
+void drawCheckerboard(bool** ledArray, int topY, int leftX, int HEIGHT, int WIDTH) {
+  int i, j;
+  for(j = HEIGHT - 1; j >= 0; j--) {
+    for(i = WIDTH - 1; i >= 0; i--) {
+      if((j + i) % 2 == 0) {
+        ledArray[topY + j][leftX + i] = true;
+      }
+      else {
+        ledArray[topY + j][leftX + i] = false;
+      }
+    }
+  }
+  return;
 }
 
 void printTest(bool** ledArray, float topMargin, float leftMargin, float botEnd, float rightEnd) {

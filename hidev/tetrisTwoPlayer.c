@@ -23,85 +23,10 @@ thread in the final version both sides will be functional. To test the right-sid
 keyboard, replace "input = getLeftInput();" with "input = 0;".
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-//#include <tetrominoes.h>
-//Windows (for testing only):
-//#include <windows.h>
-//#include <conio.h>
-//Linux:
-#include <unistd.h>
-
-//Tetris pieces (to be kept in tetrominoes.h later):
-const bool allPieces[7][8][8] = {
-{
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{1,1,1,1,1,1,1,1},
-{1,1,1,1,1,1,1,1},//I
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{1,1,0,0,0,0,0,0},
-{1,1,0,0,0,0,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//J
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,0,0,1,1,0,0},
-{0,0,0,0,1,1,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//L
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},//O
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{1,1,1,1,0,0,0,0},
-{1,1,1,1,0,0,0,0},//S
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,0,0,0,0},
-{0,0,1,1,0,0,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//T
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{1,1,1,1,0,0,0,0},
-{1,1,1,1,0,0,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},//Z
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-};
+#include "tetris.h"
 
 //Game-agnostic functions (not final, and to be kept in helpers.h later):
-int getLeftInput(void) { //This will call getLeftButton(1), getRightButton(1), and getJoystick(1)
+static int getLeftInput(void) { //This will call getLeftButton(1), getRightButton(1), and getJoystick(1)
 /*
   if(kbhit()){
     int input = getch();
@@ -130,7 +55,7 @@ int getLeftInput(void) { //This will call getLeftButton(1), getRightButton(1), a
 */
   return 0;
 }
-int getRightInput(void) { //This will call getLeftButton(2), getRightButton(2), and getJoystick(2)
+static int getRightInput(void) { //This will call getLeftButton(2), getRightButton(2), and getJoystick(2)
 /*
   if(kbhit()) {
     int input = getch();
@@ -159,94 +84,8 @@ int getRightInput(void) { //This will call getLeftButton(2), getRightButton(2), 
 */
   return 0;
 }
-void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int height, int width) {
-  int i, j;
-  for(j = height - 1; j >= 0; j--) {
-    for(i = width - 1; i >= 0; i--) {
-      ledArray[topY + j][leftX + i] = lightsOn;
-    }
-  }
-  return;
-}
 
-//Test functions (remove in final version):
-void printTest(bool** ledArray, float topMargin, float leftMargin, float botEnd, float rightEnd) {
-  int i, j;
-  for(i = topMargin; i <= botEnd; i++) {
-    for(j = leftMargin; j <= rightEnd; j++) {
-      if(ledArray[i][j]) {
-        printf("O", ledArray[i][j]);
-      }
-      else {
-        printf("*", ledArray[i][j]);
-      }
-    }
-    printf("\n");
-  }
-  return;
-}
-void frameTest(bool** ledArray, float topMargin, float leftMargin, float botEnd, float rightEnd) {
-  //Windows:
-  //Sleep(5);
-  //system("cls");
-  //Linux:
-  //usleep(20000);
-  system("clear");
-
-  printTest(ledArray, topMargin, leftMargin, botEnd, rightEnd);
-  return;
-}
-
-//Tetris-specific functions:
-bool** make2DArray(float height, float width) {
-  int i;
-  bool** ledArray = (bool**) malloc(height*sizeof(bool*));
-  for (i = 0; i < height; i++) {
-    ledArray[i] = (bool*) malloc(width*sizeof(bool));
-  }
-  return ledArray;
-}
-void fill2DArray(bool** ledArray, int height, int width, bool lightsOn) {
-  int i, j;
-  for(i = 0; i < height; i++) {
-    for(j = 0; j < width; j++) {
-      ledArray[i][j] = lightsOn;
-    }
-  }
-  return;
-}
-void free2DArray(bool** ledArray, int height) {
-  int i;
-  for (i = 0; i < height; i++) {
-    free(ledArray[i]);
-  }
-  free(ledArray);
-  return;
-}
-int* make1DArray(int length) {
-  int* longArray = (int*) malloc(length*sizeof(int));
-  int i;
-  for(i = 0; i < length; i++) {
-    longArray[i] = -1; //-1 is used to flag an unspecified piece type.
-  }
-  return longArray;
-}
-void drawCheckerboard(bool** ledArray, int topY, int leftX, int height, int width) {
-  //The bottom right pixel is always made true.
-  int i, j;
-  for(j = height - 1; j >= 0; j--) {
-    for(i = width - 1; i >= 0; i--) {
-      if((j + i) % 2 == 0) {
-        ledArray[topY + j][leftX + i] = true;
-      }
-      else {
-        ledArray[topY + j][leftX + i] = false;
-      }
-    }
-  }
-  return;
-}
-void generateNextTypes(int* nextTypes) {
+static void generateNextTypes(int* nextTypes) {
   //Adds integers representing piece types to an array, without modifying existing types.
   //Each of the 7 types is placed at most once in each half of the 14-integer array.
   int i, j;
@@ -274,7 +113,7 @@ void generateNextTypes(int* nextTypes) {
   }
   return;
 }
-void shiftNextTypes(int* nextTypes) {
+static void shiftNextTypes(int* nextTypes) {
   //Moves each piece type forward, discarding the first and replacing the last with -1 (unspecified type)
   int i;
   for(i = 0; i < 13; i++) {
@@ -283,7 +122,7 @@ void shiftNextTypes(int* nextTypes) {
   nextTypes[i] = -1;
   return;
 }
-int takeNextType(int* nextTypes) {
+static int takeNextType(int* nextTypes) {
   //Returns the first piece type from the array, shifts them, and, if necessary, generates new pieces.
   int pieceType = nextTypes[0];
   shiftNextTypes(nextTypes);
@@ -292,7 +131,7 @@ int takeNextType(int* nextTypes) {
   }
   return pieceType;
 }
-void importPiece(bool** curPiece, int curType, int pieceOrien, int pieceWidth, int player) {
+static void importPiece(bool** curPiece, int curType, int pieceOrien, int pieceWidth, int player) {
   //Copies a piece from tetromino.h to the curPiece array, with a specified orientation.
   int i, j, topGap = 0, leftGap = 0, range = pieceWidth - 1, squareWidth = pieceWidth / 4;
   if(curType == 3) {
@@ -321,34 +160,34 @@ void importPiece(bool** curPiece, int curType, int pieceOrien, int pieceWidth, i
   if(pieceOrien == 1) {
     for(j = range; j >= 0; j--) {
       for(i = range; i >= 0; i--) {
-        curPiece[j + topGap][i + leftGap] = allPieces[curType][j][i];
+        curPiece[j + topGap][i + leftGap] = allTetrominoes[curType][j][i];
       }
     }
   }
   else if (pieceOrien == 2) {
     for(j = range; j >= 0; j--) {
       for(i = range; i >= 0; i--) {
-        curPiece[j + topGap][i + leftGap] = allPieces[curType][range - i][j];
+        curPiece[j + topGap][i + leftGap] = allTetrominoes[curType][range - i][j];
       }
     }
   }
   else if (pieceOrien == 3) {
     for(j = range; j >= 0; j--) {
       for(i = range; i >= 0; i--) {
-        curPiece[j + topGap][i + leftGap] = allPieces[curType][range - j][range - i];
+        curPiece[j + topGap][i + leftGap] = allTetrominoes[curType][range - j][range - i];
       }
     }
   }
   else {
     for(j = range; j >= 0; j--) {
       for(i = range; i >= 0; i--) {
-        curPiece[j + topGap][i + leftGap] = allPieces[curType][i][range - j];
+        curPiece[j + topGap][i + leftGap] = allTetrominoes[curType][i][range - j];
       }
     }
   }
   return;
 }
-void copyPiece(bool** destPiece, bool** sourcePiece, int pieceWidth) {
+static void copyPiece(bool** destPiece, bool** sourcePiece, int pieceWidth) {
   //Copies one array's elements onto another equally sized array.
   int i, j;
   for(j = pieceWidth - 1; j >= 0; j--) {
@@ -358,7 +197,7 @@ void copyPiece(bool** destPiece, bool** sourcePiece, int pieceWidth) {
   }
   return;
 }
-void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int pieceWidth, int player) {
+static void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int pieceWidth, int player) {
   //Draws the true elements of one array to another array, or erases them.
   //It is assumed that the content being drawn will fit on the destination array.
   int i, j, firstGap = 0, secondGap = 0;
@@ -379,7 +218,7 @@ void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int
   }
   return;
 }
-void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int pieceWidth, int player) {
+static void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int pieceWidth, int player) {
   //Draws a staggered selection of one array's true elements to another array, or erases them.
   //It is assumed that the content being drawn will fit on the destination array.
   int i, j, firstGap = 0, secondGap = 0, squareWidth = pieceWidth / 4;
@@ -412,7 +251,7 @@ void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, in
   }
   return;
 }
-int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, float leftBorder, float rightEnd, float topBorder, float botEnd, int pieceWidth, bool spawning) {
+static int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, float leftBorder, float rightEnd, float topBorder, float botEnd, int pieceWidth, bool spawning) {
   //Returns 1 if projPiece would overlap elements of ledArray that are already true.
   //Ignores the projected piece colliding with the current piece during movement.
   int i, j, squareWidth = pieceWidth / 4;
@@ -438,7 +277,7 @@ int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, 
   }
   return 0;
 }
-int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int curX, int pieceWidth, int player) {
+static int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int curX, int pieceWidth, int player) {
   //Checks for complete lines and clears them. Returns the number of lines cleared.
   int i, j, a, b, linesCleared = 0, squareWidth = pieceWidth / 4;
   bool fullLine;
@@ -492,7 +331,7 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
   }
   return linesCleared;
 }
-int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int squareWidth, int player) {
+static int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int squareWidth, int player) {
   //Adds an unclearable, semi-solid line of blocks to the bottom of the play area.
   //Returns 1 if this would end the game with a "top out".
   int i, j;
@@ -540,7 +379,7 @@ int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int
     }
   }
 }
-int changePieceOrien(int pieceOrien, int modifier) {
+static int changePieceOrien(int pieceOrien, int modifier) {
   //Returns pieceOrien, turned 90 degrees clockwise (modifier == + 1) or counterclockwise (modifier == - 1)
   if(modifier == 1) {
     pieceOrien++;
@@ -1165,7 +1004,7 @@ void tetrisTwoPlayer(bool** ledArray) {
   return;
 }
 
-int main (void) {
+/*int main (void) {
   //This function's contents are throwaway. They mimic a lodev menu.
   const float ARRAY_HEIGHT = 38.0;
   const float ARRAY_WIDTH = 76.0;
@@ -1175,4 +1014,4 @@ int main (void) {
   tetrisTwoPlayer(ledArray);
   free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
-}
+}*/

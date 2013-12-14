@@ -1,85 +1,5 @@
-#include <stdio.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-//#include <tetrominoes.h>
-/*Windows: (for testing only)*/
-//#include <windows.h>
-//#include <conio.h>
-/*Linux:*/
-#include <unistd.h>
+#include "tetris.h"
 
-/*Tetris pieces: (to be stored in tetrominoes.h later)*/
-const bool allTetrominoes[7][8][8] = {
-{
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{1,1,1,1,1,1,1,1},
-{1,1,1,1,1,1,1,1},//I
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{1,1,0,0,0,0,0,0},
-{1,1,0,0,0,0,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//J
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,0,0,1,1,0,0},
-{0,0,0,0,1,1,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//L
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},//O
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},
-{1,1,1,1,0,0,0,0},
-{1,1,1,1,0,0,0,0},//S
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{0,0,1,1,0,0,0,0},
-{0,0,1,1,0,0,0,0},
-{1,1,1,1,1,1,0,0},
-{1,1,1,1,1,1,0,0},//T
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-,{
-{1,1,1,1,0,0,0,0},
-{1,1,1,1,0,0,0,0},
-{0,0,1,1,1,1,0,0},
-{0,0,1,1,1,1,0,0},//Z
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0}}
-};
-
-/*Global variables used by all games:*/
-const float ARRAY_HEIGHT = 38.0;
-const float ARRAY_WIDTH = 76.0;
 float TOP_MARGIN; /*The margins bound the area controlled by the game.*/
 float BOT_MARGIN;
 float LEFT_MARGIN;
@@ -87,64 +7,7 @@ float RIGHT_MARGIN;
 float BOT_END; /*= ARRAY_HEIGHT - BOT_MARGIN - 1.0*/
 float RIGHT_END; /*= ARRAY_WIDTH - RIGHT_MARGIN - 1.0*/
 
-/*Functions usable by all games:*/
-bool** make2DArray(float HEIGHT, float WIDTH) {
-  int i;
-  bool** ledArray = (bool**) malloc(HEIGHT*sizeof(bool*));
-  for (i = 0; i < HEIGHT; i++) {
-    ledArray[i] = (bool*) malloc(WIDTH*sizeof(bool));
-  }
-  return ledArray;
-}
-void fill2DArray(bool** ledArray, float HEIGHT, float WIDTH, bool lightsOn) {
-  int i, j;
-  for(i = 0; i < HEIGHT; i++) {
-    for(j = 0; j < WIDTH; j++) {
-      ledArray[i][j] = lightsOn;
-    }
-  }
-  return;
-}
-void free2DArray(bool** ledArray, int HEIGHT) {
-  int i;
-  for (i = 0; i < HEIGHT; i++) {
-    free(ledArray[i]);
-  }
-  free(ledArray);
-  return;
-}
-int* make1DArray(int LENGTH) {
-  int* longArray = (int*) malloc(LENGTH*sizeof(int));
-  int i;
-  for(i = 0; i < LENGTH; i++) {
-    longArray[i] = -1;
-  }
-  return longArray;
-}
-void drawRectangle(bool** ledArray, bool lightsOn, int topY, int leftX, int HEIGHT, int WIDTH) {
-  int i, j;
-  for(j = HEIGHT - 1; j >= 0; j--) {
-    for(i = WIDTH - 1; i >= 0; i--) {
-      ledArray[topY + j][leftX + i] = lightsOn;
-    }
-  }
-  return;
-}
-void drawCheckerboard(bool** ledArray, int topY, int leftX, int HEIGHT, int WIDTH) {
-  int i, j;
-  for(j = HEIGHT - 1; j >= 0; j--) {
-    for(i = WIDTH - 1; i >= 0; i--) {
-      if((j + i) % 2 == 0) {
-        ledArray[topY + j][leftX + i] = true;
-      }
-      else {
-        ledArray[topY + j][leftX + i] = false;
-      }
-    }
-  }
-  return;
-}
-int getLeftInput(void) { /*This is a placeholder for a lodev function*/
+static int getLeftInput(void) { /*This is a placeholder for a lodev function*/
   /*
   if(kbhit()){
     int input = getch();
@@ -170,34 +33,9 @@ int getLeftInput(void) { /*This is a placeholder for a lodev function*/
   */
   return 0;
 }
-void printTest(bool** ledArray) {
-  int i, j;
-  for(i = TOP_MARGIN; i <= BOT_END; i++) {
-    for(j = LEFT_MARGIN; j <= RIGHT_END; j++) {
-      if(ledArray[i][j] == true) {
-        printf("O", ledArray[i][j]);
-      }
-      else {
-        printf("*", ledArray[i][j]);
-      }
-    }
-    printf("\n");
-  }
-  return;
-}
-void frameTest(bool** ledArray) {
-  /*Windows:*/
-  //Sleep(5);
-  //system("cls");
-  /*Linux:*/
-  usleep(50000);
-  system("clear");
-
-  printTest(ledArray);
-}
 
 /*Tetris-specific functions:*/
-void refillBag(int* doubleBag, bool firstFill) {
+static void refillBag(int* doubleBag, bool firstFill) {
   int i, j;
   if(firstFill == true) {
     for(i = 0; i < 7; i++) {
@@ -222,14 +60,14 @@ void refillBag(int* doubleBag, bool firstFill) {
     } while(i != j);
   }
 }
-void shiftBag(int* doubleBag) {
+static void shiftBag(int* doubleBag) {
   int i;
   for(i = 0; i < 13; i++) {
     doubleBag[i] = doubleBag[i + 1];
   }
   doubleBag[i] = -1;
 }
-int pluckBag(int* doubleBag) {
+static int pluckBag(int* doubleBag) {
   int i = doubleBag[0];
   shiftBag(doubleBag);
   if(doubleBag[7] == -1){
@@ -237,7 +75,7 @@ int pluckBag(int* doubleBag) {
   }
   return i;
 }
-void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH) {
+static void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH) {
   int i, j;
   if(curType == 3) {
     pieceOrien = 1; /*Rotation for "O" is purposely broken for efficiency and conformation.*/
@@ -277,7 +115,7 @@ void importPiece(bool** curPiece, int curType, int pieceOrien, int PIECE_WIDTH) 
   }
   return;
 }
-void copyPiece(bool** destPiece, bool** sourcePiece, int PIECE_WIDTH) {
+static void copyPiece(bool** destPiece, bool** sourcePiece, int PIECE_WIDTH) {
   int i, j;
   for(j = PIECE_WIDTH - 1; j >= 0; j--) {
     for(i = PIECE_WIDTH - 1; i >= 0; i--) {
@@ -286,7 +124,7 @@ void copyPiece(bool** destPiece, bool** sourcePiece, int PIECE_WIDTH) {
   }
   return;
 }
-void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
+static void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
   int i, j;
   if(curType != 0) {
     PIECE_WIDTH *= 0.75;
@@ -300,7 +138,7 @@ void drawPiece(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int
   }
   return;
 }
-void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
+static void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, int curY, int curX, int PIECE_WIDTH) {
   int i, j;
   int SQUARE_WIDTH = PIECE_WIDTH / 4;
   if(curType != 0) {
@@ -315,7 +153,8 @@ void drawShadow(bool** ledArray, bool** curPiece, int curType, bool lightsOn, in
   }
   return;
 }
-int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, bool spawn) {
+
+static int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, int projX, int curY, int curX, int PIECE_WIDTH, int SQUARE_WIDTH, bool spawn) {
   int i, j;
   for(j = 0; j < PIECE_WIDTH; j += SQUARE_WIDTH) {
     for(i = 0; i < PIECE_WIDTH; i += SQUARE_WIDTH) {
@@ -334,7 +173,8 @@ int checkOverlap(bool** ledArray, bool** projPiece, bool** curPiece, int projY, 
   }
   return 0;
 }
-int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int score, int curY, int PIECE_WIDTH, int SQUARE_WIDTH) {
+
+static int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int score, int curY, int PIECE_WIDTH, int SQUARE_WIDTH) {
   int i, j, a, b, linesCleared = 0;
   bool fullLine;
   for(j = curY; j <= botBound && j < curY + PIECE_WIDTH; j += SQUARE_WIDTH) {
@@ -363,7 +203,7 @@ int checkLines(bool** ledArray, int leftBound, int rightBound, int botBound, int
   score += linesCleared * 100; /*Constant is points per line clear*/
   return score;
 }
-int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int SQUARE_WIDTH) {
+static int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int topBound, int SQUARE_WIDTH) {
   int i, j;
   bool topOut = false;
   j = topBound;
@@ -387,7 +227,7 @@ int addGarbage(bool** ledArray, int leftBound, int rightBound, int botBound, int
   }
 }
 
-void tetris(bool** ledArray) {
+void tetrisSinglePlayer(bool** ledArray) {
   /*Setting values of the global variables for Tetris:*/
   TOP_MARGIN = 0.0;
   BOT_MARGIN = 0.0;
@@ -452,7 +292,7 @@ void tetris(bool** ledArray) {
       shadY += SQUARE_WIDTH;
     }
     drawShadow(ledArray, curPiece, curType, true, shadY, curX, PIECE_WIDTH);
-    frameTest(ledArray);
+    frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_MARGIN, RIGHT_MARGIN );
     input = getLeftInput();
     if (input == 1) { /*Hard drop*/
       while(checkOverlap(ledArray, projPiece, curPiece, projY + SQUARE_WIDTH, projX, curY, curX, PIECE_WIDTH, SQUARE_WIDTH, false) == 0) {
@@ -462,7 +302,7 @@ void tetris(bool** ledArray) {
         curX = projX;
         curY = projY;
         drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
-        frameTest(ledArray);
+        frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_MARGIN, RIGHT_MARGIN );
       }
       score = checkLines(ledArray, LEFT_MARGIN + LEFT_BORDER, RIGHT_END - RIGHT_BORDER, BOT_END - BOT_BORDER - garbageLines * SQUARE_WIDTH, TOP_MARGIN + TOP_BORDER, score, curY, PIECE_WIDTH, SQUARE_WIDTH);
         /*
@@ -589,15 +429,15 @@ void tetris(bool** ledArray) {
     }
   }
   drawPiece(ledArray, curPiece, curType, true, curY, curX, PIECE_WIDTH);
-  frameTest(ledArray);
+  frameTest(ledArray, TOP_MARGIN, LEFT_MARGIN, BOT_MARGIN, RIGHT_MARGIN );
   free(doubleBag);
   free2DArray(curPiece, PIECE_WIDTH);
   free2DArray(projPiece, PIECE_WIDTH);
   return;
 }
 
-int main (void) {
-  /*This function's contents are placeholders for a lodev menu.*/
+/*int main (void) {
+  //This function's contents are placeholders for a lodev menu.
   bool** ledArray;
   ledArray = make2DArray(ARRAY_HEIGHT, ARRAY_WIDTH);
   int input = 0;
@@ -615,4 +455,4 @@ int main (void) {
   }
   free2DArray(ledArray, ARRAY_HEIGHT);
   return 0;
-}
+}*/
