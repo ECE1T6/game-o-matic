@@ -1,0 +1,16 @@
+
+
+#include <iostream>
+#include <Map.h>
+
+using namespace std;
+
+int main(int argc, char* argv[]){
+
+
+	cout << "WELCOME!" << endl;
+	
+	return 0;
+}
+
+

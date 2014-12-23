@@ -1,0 +1,43 @@
+
+
+#ifndef __SHAPE_H__
+#define __SHAPE_H__
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+#include <stdbool.h>
+#include <math.h>
+
+
+enum {
+	//D_LINE_LIST,
+	//D_LINE_STRIP,
+	D_LINE_LOOP,
+	//D_TRIANGLE_LIST,
+	D_TRIANGLE_STRIP,
+	//D_TRIANGLE_FAN,
+
+};
+
+
+typedef struct __Shape{
+	int N;
+	int type;
+	double outline;
+	double fill;
+	bool transparent;
+	float* x;
+	float* y;
+	float* z;
+
+} Shape;
+
+// TODO: add support for 3D shapes
+
+
+
+#endif
+
+
