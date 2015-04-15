@@ -17,7 +17,7 @@ fi
 cd ../lodev
 
 echo "Compiling low-level libraries..."
-gcc -Wall -pthread displayTest.c lodevInit.c register.c render.c control.c -o displayTest -lwiringPi -std=gnu99
+gcc -Wall -pthread max72.c displayTest.c lodevInit.c register.c render.c control.c -o displayTest -lwiringPi -std=gnu99
 GCC=$?
 if [ $GCC != 0 ]; then #sucessful compilation
   echo "Lodev Compilation FAILED"
