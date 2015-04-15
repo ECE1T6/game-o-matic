@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "register.h"
 #include "render.h"
@@ -89,6 +90,25 @@ void *render(void *args) {
     refresh(screen);
   }
 
+  return NULL;
+}
+
+/* packetize -- provided with the offset of x and y, will
+packetize data and send it over GPIO to MAX72xx chip
+
+Uses SPI protocol
+*/
+void packetize( int startx, int starty, int max72, bool ** screen ) {
+  int i, j;
+  for (i = startx; i < startx + 8; i++) {
+    unsigned volatile short regval = 0;
+    for (j = starty; j < starty + 8; j++ ) {
+      //Convert	row into data
+      if ( screen[i][j] == true ) regval += pow(2,(j-starty));
+    }
+    //Write reg to SPI interface
+    writeOne(max72, i, regval);
+  }
   return NULL;
 }
 
