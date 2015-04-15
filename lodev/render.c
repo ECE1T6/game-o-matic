@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "max72.h"
 #include "register.h"
 #include "render.h"
 #include "screen.h"
